@@ -162,10 +162,10 @@ const Index = () => {
       {/* Try & Pick counters */}
       <div className="z-10 flex items-center gap-3">
         <div className="rounded-full border border-border bg-card/80 px-5 py-2 text-sm font-bold text-foreground shadow-sm backdrop-blur-sm">
-          උත්සාහය {currentTry} / {MAX_TRIES}
+          Try {currentTry} / {MAX_TRIES}
         </div>
         <div className="rounded-full border border-border bg-card/80 px-5 py-2 text-sm font-semibold text-muted-foreground shadow-sm backdrop-blur-sm">
-          තෝරාගැනීම {picksThisTry} / {MAX_PICKS_PER_TRY}
+          Pick {picksThisTry} / {MAX_PICKS_PER_TRY}
         </div>
       </div>
 
