@@ -152,10 +152,10 @@ const Index = () => {
           🏺 කන මුට්ටි බිඳීම
         </h1>
         <p className="mt-2 text-lg font-semibold text-festive-orange">
-          මුට්ටියක් තෝරලා වාසනාව බලන්න!
+          Pick a pot to find the treasure!
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          උත්සාහයකට තෝරා ගැනීම් {MAX_PICKS_PER_TRY}ක් · උත්සාහ {MAX_TRIES}ක්
+          {MAX_PICKS_PER_TRY} picks per try · {MAX_TRIES} tries
         </p>
       </motion.div>
 
