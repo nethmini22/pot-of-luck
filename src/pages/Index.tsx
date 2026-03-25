@@ -196,7 +196,7 @@ const Index = () => {
             >
               <motion.img
                 src={isRevealed ? (isWin ? potWin : potEmpty) : clayPot}
-                alt={`මුට්ටිය ${i + 1}`}
+                alt={`Pot ${i + 1}`}
                 className="h-20 w-20 object-contain drop-shadow-md"
                 width={80}
                 height={80}
