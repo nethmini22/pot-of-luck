@@ -152,20 +152,20 @@ const Index = () => {
           🏺 කන මුට්ටි බිඳීම
         </h1>
         <p className="mt-2 text-lg font-semibold text-festive-orange">
-          මුට්ටියක් තෝරලා වාසනාව බලන්න!
+          Pick a pot to find the treasure!
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          උත්සාහයකට තෝරා ගැනීම් {MAX_PICKS_PER_TRY}ක් · උත්සාහ {MAX_TRIES}ක්
+          {MAX_PICKS_PER_TRY} picks per try · {MAX_TRIES} tries
         </p>
       </motion.div>
 
       {/* Try & Pick counters */}
       <div className="z-10 flex items-center gap-3">
         <div className="rounded-full border border-border bg-card/80 px-5 py-2 text-sm font-bold text-foreground shadow-sm backdrop-blur-sm">
-          උත්සාහය {currentTry} / {MAX_TRIES}
+          Try {currentTry} / {MAX_TRIES}
         </div>
         <div className="rounded-full border border-border bg-card/80 px-5 py-2 text-sm font-semibold text-muted-foreground shadow-sm backdrop-blur-sm">
-          තෝරාගැනීම {picksThisTry} / {MAX_PICKS_PER_TRY}
+          Pick {picksThisTry} / {MAX_PICKS_PER_TRY}
         </div>
       </div>
 
@@ -196,7 +196,7 @@ const Index = () => {
             >
               <motion.img
                 src={isRevealed ? (isWin ? potWin : potEmpty) : clayPot}
-                alt={`මුට්ටිය ${i + 1}`}
+                alt={`Pot ${i + 1}`}
                 className="h-20 w-20 object-contain drop-shadow-md"
                 width={80}
                 height={80}
@@ -208,7 +208,7 @@ const Index = () => {
                   isWin ? "text-[hsl(var(--win))]" : "text-muted-foreground"
                 }`}
               >
-                මුට්ටිය {i + 1}
+                Pot {i + 1}
               </span>
               {isClickable && (
                 <motion.div
@@ -234,7 +234,7 @@ const Index = () => {
             exit={{ opacity: 0 }}
           >
             <p className="text-lg font-bold text-festive-orange">
-              😅 මේ පාරට නෑ! ඊළඟ උත්සාහය බලමු…
+              😅 No luck this time! Next try coming up…
             </p>
           </motion.div>
         )}
@@ -253,7 +253,7 @@ const Index = () => {
               🎉 සුභ අලුත් අවුරුද්දක් වේවා!
             </p>
             <p className="text-lg text-festive-orange">
-              ඔබට වාසනාව හිමි වුණා! 🥳
+              Congratulations! You found the treasure! 🥳
             </p>
 
             {/* Discount code card */}
@@ -270,7 +270,7 @@ const Index = () => {
                 transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
               />
               <p className="text-sm font-semibold text-muted-foreground">
-                🎁 ඔබේ වට්ටම් කේතය
+                🎁 Your Discount Code
               </p>
               <p className="mt-1 font-mono text-3xl font-black tracking-widest text-foreground">
                 {DISCOUNT_CODE}
@@ -281,7 +281,7 @@ const Index = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {copied ? "✅ පිටපත් කළා!" : "📋 කේතය පිටපත් කරන්න"}
+                {copied ? "✅ Copied!" : "📋 Copy Code"}
               </motion.button>
             </motion.div>
           </motion.div>
@@ -294,10 +294,10 @@ const Index = () => {
             animate={{ opacity: 1, scale: 1 }}
           >
             <p className="text-2xl font-bold text-[hsl(var(--lose))]">
-              😢 අපොයි! මේ පාරට වාසනාව නෑ
+              😢 Game Over!
             </p>
             <p className="mt-1 text-muted-foreground">
-              ඊළඟ පාරට වාසනාව ඔබට හිමි වේවා! 🙏
+              Better luck next time! 🙏
             </p>
           </motion.div>
         )}
@@ -312,7 +312,7 @@ const Index = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          🏺 නැවත ක්‍රීඩා කරන්න
+          🏺 Play Again
         </motion.button>
       )}
 
