@@ -312,7 +312,7 @@ const Index = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          🏺 නැවත ක්‍රීඩා කරන්න
+          🏺 Play Again
         </motion.button>
       )}
 
