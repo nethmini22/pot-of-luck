@@ -294,10 +294,10 @@ const Index = () => {
             animate={{ opacity: 1, scale: 1 }}
           >
             <p className="text-2xl font-bold text-[hsl(var(--lose))]">
-              😢 අපොයි! මේ පාරට වාසනාව නෑ
+              😢 Game Over!
             </p>
             <p className="mt-1 text-muted-foreground">
-              ඊළඟ පාරට වාසනාව ඔබට හිමි වේවා! 🙏
+              Better luck next time! 🙏
             </p>
           </motion.div>
         )}
