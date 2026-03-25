@@ -281,7 +281,7 @@ const Index = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                {copied ? "✅ පිටපත් කළා!" : "📋 කේතය පිටපත් කරන්න"}
+                {copied ? "✅ Copied!" : "📋 Copy Code"}
               </motion.button>
             </motion.div>
           </motion.div>
