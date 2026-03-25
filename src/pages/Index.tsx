@@ -270,7 +270,7 @@ const Index = () => {
                 transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
               />
               <p className="text-sm font-semibold text-muted-foreground">
-                🎁 ඔබේ වට්ටම් කේතය
+                🎁 Your Discount Code
               </p>
               <p className="mt-1 font-mono text-3xl font-black tracking-widest text-foreground">
                 {DISCOUNT_CODE}
