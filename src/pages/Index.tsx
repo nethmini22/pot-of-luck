@@ -234,7 +234,7 @@ const Index = () => {
             exit={{ opacity: 0 }}
           >
             <p className="text-lg font-bold text-festive-orange">
-              😅 මේ පාරට නෑ! ඊළඟ උත්සාහය බලමු…
+              😅 No luck this time! Next try coming up…
             </p>
           </motion.div>
         )}
