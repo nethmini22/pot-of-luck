@@ -7,16 +7,17 @@ import potEmpty from "@/assets/pot-broken-empty.png";
 const TOTAL_POTS = 5;
 const MAX_PICKS_PER_TRY = 2;
 const MAX_TRIES = 2;
+const DISCOUNT_CODE = "WIN10";
 
-const confettiEmojis = ["🎊", "🪷", "🌸", "✨", "🎉", "🪔", "🌺", "🎆", "🪅"];
+const confettiEmojis = ["🎊", "🪷", "🌸", "✨", "🎉", "🪔", "🌺", "🎆", "🪅", "🥥", "🍌"];
 
 const FloatingEmoji = ({ emoji, delay }: { emoji: string; delay: number }) => (
   <motion.span
     className="pointer-events-none fixed text-4xl"
     initial={{ opacity: 1, y: 0, x: Math.random() * 300 - 150 }}
-    animate={{ opacity: 0, y: -400, rotate: Math.random() * 360 }}
-    transition={{ duration: 3, delay, ease: "easeOut" }}
-    style={{ left: `${Math.random() * 80 + 10}%`, bottom: "20%" }}
+    animate={{ opacity: 0, y: -500, rotate: Math.random() * 520 }}
+    transition={{ duration: 3.5, delay, ease: "easeOut" }}
+    style={{ left: `${Math.random() * 80 + 10}%`, bottom: "15%" }}
   >
     {emoji}
   </motion.span>
@@ -28,6 +29,7 @@ const Index = () => {
   const [won, setWon] = useState<boolean | null>(null);
   const [revealedPots, setRevealedPots] = useState<Set<number>>(new Set());
   const [showConfetti, setShowConfetti] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [winningPot, setWinningPot] = useState(() =>
     Math.floor(Math.random() * TOTAL_POTS)
   );
@@ -35,7 +37,6 @@ const Index = () => {
   const gameOver = won !== null;
 
   const startNextTry = useCallback(() => {
-    // Reset pots for a new try with a new winning pot
     setRevealedPots(new Set());
     setPicksThisTry(0);
     setCurrentTry((prev) => prev + 1);
@@ -54,12 +55,10 @@ const Index = () => {
         setWon(true);
         setShowConfetti(true);
       } else if (newPicks >= MAX_PICKS_PER_TRY) {
-        // Used all picks this try
         if (currentTry >= MAX_TRIES) {
           setWon(false);
         } else {
-          // Auto-advance to next try after a short delay
-          setTimeout(() => startNextTry(), 1200);
+          setTimeout(() => startNextTry(), 1500);
         }
       }
     },
@@ -68,61 +67,76 @@ const Index = () => {
 
   const reset = () => window.location.reload();
 
+  const copyCode = () => {
+    navigator.clipboard.writeText(DISCOUNT_CODE);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const waitingForNextTry =
     !gameOver && picksThisTry >= MAX_PICKS_PER_TRY && currentTry < MAX_TRIES;
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center gap-6 overflow-hidden bg-background p-6">
-      {/* Avurudu festive background */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.06]"
+    <div className="relative flex min-h-screen flex-col items-center justify-center gap-5 overflow-hidden bg-background p-6">
+      {/* Avurudu radial glow background */}
+      <div
+        className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage: `
-            radial-gradient(circle at 20% 30%, hsl(var(--gold)) 0%, transparent 50%),
-            radial-gradient(circle at 80% 70%, hsl(var(--deep-red)) 0%, transparent 50%),
-            radial-gradient(circle at 50% 50%, hsl(var(--festive-orange)) 0%, transparent 60%)
+          background: `
+            radial-gradient(ellipse 80% 60% at 20% 20%, hsl(var(--gold) / 0.12) 0%, transparent 70%),
+            radial-gradient(ellipse 60% 80% at 85% 80%, hsl(var(--deep-red) / 0.1) 0%, transparent 70%),
+            radial-gradient(ellipse 90% 50% at 50% 100%, hsl(var(--festive-orange) / 0.08) 0%, transparent 60%)
           `,
         }}
       />
-      {/* Repeating mandala-inspired pattern */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.04]"
+
+      {/* Kolam / mandala repeating pattern overlay */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.035]"
         style={{
           backgroundImage: `
-            repeating-conic-gradient(from 0deg at 50% 50%, hsl(var(--gold)) 0deg 30deg, transparent 30deg 60deg)
+            repeating-conic-gradient(from 0deg at 50% 50%, hsl(var(--gold)) 0deg 20deg, transparent 20deg 40deg)
           `,
-          backgroundSize: "120px 120px",
+          backgroundSize: "100px 100px",
         }}
       />
 
-      {/* Decorative border pattern */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-4 bg-gradient-to-r from-[hsl(var(--deep-red))] via-[hsl(var(--gold))] to-[hsl(var(--deep-red))]" />
-      <div className="pointer-events-none absolute inset-x-0 top-4 h-1 bg-gradient-to-r from-[hsl(var(--festive-orange))] via-[hsl(var(--deep-red))] to-[hsl(var(--festive-orange))]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-r from-[hsl(var(--deep-red))] via-[hsl(var(--gold))] to-[hsl(var(--deep-red))]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-4 h-1 bg-gradient-to-r from-[hsl(var(--festive-orange))] via-[hsl(var(--deep-red))] to-[hsl(var(--festive-orange))]" />
+      {/* Decorative double-stripe borders */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-5 bg-gradient-to-r from-[hsl(var(--deep-red))] via-[hsl(var(--gold))] to-[hsl(var(--deep-red))]" />
+      <div className="pointer-events-none absolute inset-x-0 top-5 h-[3px] bg-gradient-to-r from-[hsl(var(--festive-orange))] via-[hsl(var(--deep-red))] to-[hsl(var(--festive-orange))]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-5 bg-gradient-to-r from-[hsl(var(--deep-red))] via-[hsl(var(--gold))] to-[hsl(var(--deep-red))]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-5 h-[3px] bg-gradient-to-r from-[hsl(var(--festive-orange))] via-[hsl(var(--deep-red))] to-[hsl(var(--festive-orange))]" />
 
-      {/* Corner decorations */}
-      {["top-6 left-6", "top-6 right-6", "bottom-6 left-6", "bottom-6 right-6"].map((pos, i) => (
+      {/* Corner oil lamps */}
+      {["top-8 left-6", "top-8 right-6", "bottom-8 left-6", "bottom-8 right-6"].map((pos, i) => (
         <motion.div
           key={pos}
           className={`pointer-events-none absolute ${pos} text-3xl`}
-          animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-          transition={{ repeat: Infinity, duration: 4, delay: i * 0.5 }}
+          animate={{ rotate: [0, 8, -8, 0], scale: [1, 1.15, 1] }}
+          transition={{ repeat: Infinity, duration: 3.5, delay: i * 0.6 }}
         >
           🪔
         </motion.div>
       ))}
 
-      {/* Floating festive elements */}
-      {["🪷", "🌺", "🌸"].map((emoji, i) => (
+      {/* Scattered floating flowers */}
+      {[
+        { emoji: "🪷", x: 12, y: 18 },
+        { emoji: "🌺", x: 75, y: 12 },
+        { emoji: "🌸", x: 88, y: 55 },
+        { emoji: "🪷", x: 8, y: 65 },
+        { emoji: "🌺", x: 45, y: 8 },
+      ].map(({ emoji, x, y }, i) => (
         <motion.div
-          key={emoji}
-          className="pointer-events-none absolute text-2xl opacity-40"
-          style={{ left: `${20 + i * 25}%`, top: `${15 + i * 12}%` }}
+          key={i}
+          className="pointer-events-none absolute text-xl opacity-30"
+          style={{ left: `${x}%`, top: `${y}%` }}
           animate={{
-            y: [0, -15, 0],
-            rotate: [0, 15, -15, 0],
-            opacity: [0.3, 0.5, 0.3],
+            y: [0, -12, 0],
+            rotate: [0, 20, -20, 0],
+            opacity: [0.2, 0.45, 0.2],
           }}
-          transition={{ repeat: Infinity, duration: 5 + i, delay: i * 0.8 }}
+          transition={{ repeat: Infinity, duration: 5 + i * 0.7, delay: i * 0.5 }}
         >
           {emoji}
         </motion.div>
@@ -130,33 +144,33 @@ const Index = () => {
 
       {/* Title */}
       <motion.div
-        className="text-center"
+        className="z-10 text-center"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <h1 className="text-4xl font-bold text-foreground md:text-5xl">
           🏺 කන මුට්ටි බිඳීම
         </h1>
-        <p className="mt-2 text-lg font-medium text-festive-orange">
-          Kana Mutti Bindeema
+        <p className="mt-2 text-lg font-semibold text-festive-orange">
+          මුට්ටියක් තෝරලා වාසනාව බලන්න!
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Pick a pot to find the treasure! ({MAX_PICKS_PER_TRY} picks per try)
+          උත්සාහයකට තෝරා ගැනීම් {MAX_PICKS_PER_TRY}ක් · උත්සාහ {MAX_TRIES}ක්
         </p>
       </motion.div>
 
       {/* Try & Pick counters */}
-      <div className="flex items-center gap-3">
-        <div className="rounded-full border border-border bg-card px-5 py-2 text-sm font-semibold text-foreground shadow-sm">
-          Try {currentTry} of {MAX_TRIES}
+      <div className="z-10 flex items-center gap-3">
+        <div className="rounded-full border border-border bg-card/80 px-5 py-2 text-sm font-bold text-foreground shadow-sm backdrop-blur-sm">
+          උත්සාහය {currentTry} / {MAX_TRIES}
         </div>
-        <div className="rounded-full border border-border bg-card px-5 py-2 text-sm font-semibold text-muted-foreground shadow-sm">
-          Pick {picksThisTry} of {MAX_PICKS_PER_TRY}
+        <div className="rounded-full border border-border bg-card/80 px-5 py-2 text-sm font-semibold text-muted-foreground shadow-sm backdrop-blur-sm">
+          තෝරාගැනීම {picksThisTry} / {MAX_PICKS_PER_TRY}
         </div>
       </div>
 
       {/* Pots */}
-      <div className="flex flex-wrap justify-center gap-5">
+      <div className="z-10 flex flex-wrap justify-center gap-5">
         {Array.from({ length: TOTAL_POTS }).map((_, i) => {
           const isRevealed = revealedPots.has(i);
           const isWin = i === winningPot && isRevealed;
@@ -169,42 +183,38 @@ const Index = () => {
               onClick={() => handlePick(i)}
               disabled={!isClickable}
               className={`group relative flex h-36 w-28 flex-col items-center justify-center rounded-2xl border-2 transition-all
-                ${isWin ? "border-[hsl(var(--win))] bg-[hsl(var(--win)/0.08)] shadow-lg shadow-[hsl(var(--win)/0.2)]" : ""}
-                ${isLoss ? "border-muted bg-muted/30 opacity-60 grayscale" : ""}
-                ${isClickable ? "cursor-pointer border-[hsl(var(--pot)/0.3)] bg-card hover:border-[hsl(var(--pot))] hover:shadow-lg hover:shadow-[hsl(var(--gold)/0.3)]" : ""}
-                ${!isClickable && !isRevealed ? "cursor-default border-border bg-card opacity-50" : ""}
+                ${isWin ? "border-[hsl(var(--win))] bg-[hsl(var(--win)/0.1)] shadow-xl shadow-[hsl(var(--win)/0.25)]" : ""}
+                ${isLoss ? "border-muted bg-muted/30 opacity-50 grayscale" : ""}
+                ${isClickable ? "cursor-pointer border-[hsl(var(--pot)/0.3)] bg-card/70 backdrop-blur-sm hover:border-[hsl(var(--pot))] hover:bg-card hover:shadow-xl hover:shadow-[hsl(var(--gold)/0.35)]" : ""}
+                ${!isClickable && !isRevealed ? "cursor-default border-border bg-card/50 opacity-40" : ""}
               `}
-              whileHover={isClickable ? { scale: 1.08, y: -6 } : {}}
-              whileTap={isClickable ? { scale: 0.95 } : {}}
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: isLoss ? 0.6 : 1, y: 0 }}
-              transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
+              whileHover={isClickable ? { scale: 1.1, y: -8 } : {}}
+              whileTap={isClickable ? { scale: 0.92 } : {}}
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: isLoss ? 0.5 : 1, y: 0 }}
+              transition={{ delay: i * 0.1, type: "spring", stiffness: 180 }}
             >
               <motion.img
                 src={isRevealed ? (isWin ? potWin : potEmpty) : clayPot}
-                alt={`Pot ${i + 1}`}
-                className="h-20 w-20 object-contain"
+                alt={`මුට්ටිය ${i + 1}`}
+                className="h-20 w-20 object-contain drop-shadow-md"
                 width={80}
                 height={80}
-                animate={isWin ? { rotate: [0, -5, 5, 0] } : {}}
-                transition={isWin ? { repeat: 2, duration: 0.3 } : {}}
+                animate={isWin ? { rotate: [0, -6, 6, 0], scale: [1, 1.1, 1] } : {}}
+                transition={isWin ? { repeat: 3, duration: 0.3 } : {}}
               />
               <span
                 className={`mt-2 text-xs font-bold ${
-                  isWin
-                    ? "text-[hsl(var(--win))]"
-                    : isLoss
-                    ? "text-muted-foreground"
-                    : "text-muted-foreground"
+                  isWin ? "text-[hsl(var(--win))]" : "text-muted-foreground"
                 }`}
               >
-                Pot {i + 1}
+                මුට්ටිය {i + 1}
               </span>
               {isClickable && (
                 <motion.div
                   className="pointer-events-none absolute -top-1 -right-1 text-lg"
-                  animate={{ scale: [1, 1.3, 1] }}
-                  transition={{ repeat: Infinity, duration: 2, delay: i * 0.3 }}
+                  animate={{ scale: [1, 1.4, 1], rotate: [0, 15, 0] }}
+                  transition={{ repeat: Infinity, duration: 1.8, delay: i * 0.25 }}
                 >
                   ✨
                 </motion.div>
@@ -214,25 +224,27 @@ const Index = () => {
         })}
       </div>
 
-      {/* Waiting for next try message */}
+      {/* Waiting for next try */}
       <AnimatePresence>
         {waitingForNextTry && (
-          <motion.p
-            className="text-lg font-semibold text-festive-orange"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          <motion.div
+            className="z-10 text-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
-            No luck! Moving to next try…
-          </motion.p>
+            <p className="text-lg font-bold text-festive-orange">
+              😅 මේ පාරට නෑ! ඊළඟ උත්සාහය බලමු…
+            </p>
+          </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Result */}
+      {/* Win Result with Discount Code */}
       <AnimatePresence>
         {won === true && (
           <motion.div
-            className="text-center"
+            className="z-10 flex flex-col items-center gap-4 text-center"
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", stiffness: 200 }}
@@ -240,22 +252,52 @@ const Index = () => {
             <p className="text-3xl font-bold text-[hsl(var(--win))]">
               🎉 සුභ අලුත් අවුරුද්දක් වේවා!
             </p>
-            <p className="mt-1 text-lg text-festive-orange">
-              Congratulations! You found the treasure!
+            <p className="text-lg text-festive-orange">
+              ඔබට වාසනාව හිමි වුණා! 🥳
             </p>
+
+            {/* Discount code card */}
+            <motion.div
+              className="relative mt-2 overflow-hidden rounded-2xl border-2 border-[hsl(var(--gold))] bg-card/90 px-8 py-5 shadow-2xl shadow-[hsl(var(--gold)/0.3)] backdrop-blur-sm"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              {/* Shimmering effect */}
+              <motion.div
+                className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-[hsl(var(--gold)/0.15)] to-transparent"
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
+              />
+              <p className="text-sm font-semibold text-muted-foreground">
+                🎁 ඔබේ වට්ටම් කේතය
+              </p>
+              <p className="mt-1 font-mono text-3xl font-black tracking-widest text-foreground">
+                {DISCOUNT_CODE}
+              </p>
+              <motion.button
+                onClick={copyCode}
+                className="mt-3 rounded-full bg-primary px-6 py-2 text-sm font-bold text-primary-foreground shadow-md transition-all hover:shadow-lg hover:brightness-110"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {copied ? "✅ පිටපත් කළා!" : "📋 කේතය පිටපත් කරන්න"}
+              </motion.button>
+            </motion.div>
           </motion.div>
         )}
+
         {won === false && (
           <motion.div
-            className="text-center"
+            className="z-10 text-center"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
           >
             <p className="text-2xl font-bold text-[hsl(var(--lose))]">
-              😢 Game Over!
+              😢 අපොයි! මේ පාරට වාසනාව නෑ
             </p>
             <p className="mt-1 text-muted-foreground">
-              Better luck next time!
+              ඊළඟ පාරට වාසනාව ඔබට හිමි වේවා! 🙏
             </p>
           </motion.div>
         )}
@@ -264,20 +306,20 @@ const Index = () => {
       {gameOver && (
         <motion.button
           onClick={reset}
-          className="rounded-full bg-primary px-8 py-3 font-bold text-primary-foreground shadow-md transition-all hover:shadow-lg hover:brightness-110"
+          className="z-10 rounded-full bg-primary px-8 py-3 font-bold text-primary-foreground shadow-lg transition-all hover:shadow-xl hover:brightness-110"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          🏺 Play Again
+          🏺 නැවත ක්‍රීඩා කරන්න
         </motion.button>
       )}
 
       {/* Confetti */}
       {showConfetti &&
         confettiEmojis.map((emoji, i) => (
-          <FloatingEmoji key={i} emoji={emoji} delay={i * 0.12} />
+          <FloatingEmoji key={i} emoji={emoji} delay={i * 0.1} />
         ))}
     </div>
   );
