@@ -208,7 +208,7 @@ const Index = () => {
                   isWin ? "text-[hsl(var(--win))]" : "text-muted-foreground"
                 }`}
               >
-                මුට්ටිය {i + 1}
+                Pot {i + 1}
               </span>
               {isClickable && (
                 <motion.div
