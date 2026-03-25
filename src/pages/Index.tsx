@@ -253,7 +253,7 @@ const Index = () => {
               🎉 සුභ අලුත් අවුරුද්දක් වේවා!
             </p>
             <p className="text-lg text-festive-orange">
-              ඔබට වාසනාව හිමි වුණා! 🥳
+              Congratulations! You found the treasure! 🥳
             </p>
 
             {/* Discount code card */}
