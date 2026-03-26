@@ -7,8 +7,34 @@ import potEmpty from "@/assets/pot-broken-empty.png";
 const TOTAL_POTS = 5;
 const MAX_PICKS_PER_TRY = 2;
 const MAX_TRIES = 2;
+const MAX_CODE_USES = 2;
+const DISCOUNT_USAGE_STORAGE_KEY = "avurudu-discount-usage";
 
 const confettiEmojis = ["🎊", "🪷", "🌸", "✨", "🎉", "🪔", "🌺", "🎆", "🪅", "🥥", "🍌"];
+
+const getStoredCodeUsage = (): Record<string, number> => {
+  try {
+    const raw = window.localStorage.getItem(DISCOUNT_USAGE_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+const storeCodeUsage = (usage: Record<string, number>) => {
+  window.localStorage.setItem(DISCOUNT_USAGE_STORAGE_KEY, JSON.stringify(usage));
+};
+
+const getNextAvailableCode = (codes: string[]) => {
+  const usage = getStoredCodeUsage();
+  const nextCode = codes.find((code) => (usage[code] ?? 0) < MAX_CODE_USES);
+
+  if (!nextCode) return null;
+
+  usage[nextCode] = (usage[nextCode] ?? 0) + 1;
+  storeCodeUsage(usage);
+  return nextCode;
+};
 
 const FloatingEmoji = ({ emoji, delay }: { emoji: string; delay: number }) => (
   <motion.span
@@ -34,7 +60,6 @@ const Index = () => {
   );
   const [discountCodes, setDiscountCodes] = useState<string[]>([]);
   const [selectedCode, setSelectedCode] = useState<string>('WIN10');
-  const [currentCodeIndex, setCurrentCodeIndex] = useState(0);
 
   useEffect(() => {
     fetch('https://opensheet.elk.sh/1c-BJMLAUPVN3vJ9K7uesj0Z980aX7T4ujCveGFzTn2g/Sheet1')
