@@ -37,14 +37,14 @@ const Index = () => {
   const [currentCodeIndex, setCurrentCodeIndex] = useState(0);
 
   useEffect(() => {
-    fetch('/discount-codes.csv')
-      .then(res => res.text())
-      .then(text => {
-        const codes = text.split('\n').map(line => line.trim()).filter(line => line);
-        setDiscountCodes(codes);
+    fetch('https://opensheet.elk.sh/1c-BJMLAUPVN3vJ9K7uesj0Z980aX7T4ujCveGFzTn2g/Sheet1')
+      .then(res => res.json())
+      .then((rows: Record<string, string>[]) => {
+        const codes = rows.map(row => Object.values(row)[0]).filter(Boolean);
+        if (codes.length > 0) setDiscountCodes(codes);
       })
       .catch(() => {
-        // Fallback to default if CSV not found
+        // Fallback to default if fetch fails
       });
   }, []);
 
