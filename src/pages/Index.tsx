@@ -1,39 +1,14 @@
 import { useState, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 import clayPot from "@/assets/clay-pot.png";
 import potWin from "@/assets/pot-broken-win.png";
 import potEmpty from "@/assets/pot-broken-empty.png";
 
 const TOTAL_POTS = 5;
-const MAX_PICKS_PER_TRY = 2;
+const MAX_PICKS_PER_TRY = 1;
 const MAX_TRIES = 2;
-const DISCOUNT_USAGE_STORAGE_KEY = "avurudu-discount-usage";
 
-const confettiEmojis = ["🎊", "🪷", "🌸", "✨", "🎉", "🪔", "🌺", "🎆", "🪅", "🥥", "🍌"];
-
-const getStoredUsedCodes = (): string[] => {
-  try {
-    const raw = window.localStorage.getItem(DISCOUNT_USAGE_STORAGE_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
-const storeUsedCodes = (codes: string[]) => {
-  window.localStorage.setItem(DISCOUNT_USAGE_STORAGE_KEY, JSON.stringify(codes));
-};
-
-const getNextAvailableCode = (codes: string[]) => {
-  const usedCodes = new Set(getStoredUsedCodes());
-  const nextCode = codes.find((code) => !usedCodes.has(code));
-
-  if (!nextCode) return null;
-
-  storeUsedCodes([...usedCodes, nextCode]);
-  return nextCode;
-};
+const confettiEmojis = ["🌸", "💮", "✨", "🎊", "🏺", "🏵️"];
 
 const FloatingEmoji = ({ emoji, delay }: { emoji: string; delay: number }) => (
   <motion.span
@@ -47,377 +22,441 @@ const FloatingEmoji = ({ emoji, delay }: { emoji: string; delay: number }) => (
   </motion.span>
 );
 
+const CursorBat = ({ isSwinging, isMobile, forceX, forceY }: { isSwinging: boolean, isMobile: boolean, forceX?: number, forceY?: number }) => {
+  const cursorX = useMotionValue(-100);
+  const cursorY = useMotionValue(-100);
+
+  // useSpring provides zero-lag but slightly trailing organic feel
+  const springConfig = { damping: 25, stiffness: 200, mass: 0.5 };
+  const smoothX = useSpring(cursorX, springConfig);
+  const smoothY = useSpring(cursorY, springConfig);
+
+  useEffect(() => {
+    if (isMobile) return;
+
+    const moveCursor = (e: MouseEvent) => {
+      cursorX.set(e.clientX);
+      cursorY.set(e.clientY);
+    };
+
+    window.addEventListener("mousemove", moveCursor);
+    return () => window.removeEventListener("mousemove", moveCursor);
+  }, [cursorX, cursorY, isMobile]);
+
+  useEffect(() => {
+    if (isMobile && forceX !== undefined && forceY !== undefined && isSwinging) {
+      cursorX.set(forceX);
+      cursorY.set(forceY);
+    }
+  }, [isMobile, forceX, forceY, isSwinging, cursorX, cursorY]);
+
+  if (isMobile && !isSwinging) return null;
+
+  return (
+    <motion.div
+      className="pointer-events-none fixed z-[100] top-0 left-0"
+      style={{
+        x: smoothX,
+        y: smoothY,
+      }}
+    >
+      <motion.div
+        className="origin-bottom-left"
+        initial={{ rotate: 15 }}
+        animate={{ rotate: isSwinging ? 90 : 15 }} // 75-degree downward swing
+        transition={{ type: "spring", stiffness: 400, damping: 15 }}
+        style={{ x: "-30%", y: "-90%" }}
+      >
+        <svg width="60" height="200" viewBox="0 0 60 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-2xl">
+          <defs>
+            <linearGradient id="batGold" x1="0" y1="0" x2="60" y2="200" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#FCF6BA" />
+              <stop offset="35%" stopColor="#BF953F" />
+              <stop offset="70%" stopColor="#AA771C" />
+              <stop offset="100%" stopColor="#6C4910" />
+            </linearGradient>
+            <linearGradient id="batGrip" x1="0" y1="150" x2="60" y2="200" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stopColor="#2A1B00" />
+              <stop offset="100%" stopColor="#1A1100" />
+            </linearGradient>
+          </defs>
+          {/* Main Stick */}
+          <rect x="15" y="10" width="30" height="180" rx="15" fill="url(#batGold)" stroke="#FFF" strokeWidth="1" strokeOpacity="0.3" />
+          {/* Grip */}
+          <rect x="15" y="140" width="30" height="50" rx="15" fill="url(#batGrip)" />
+          {/* Decorative Wraps */}
+          <rect x="13" y="145" width="34" height="4" fill="#BF953F" />
+          <rect x="13" y="155" width="34" height="4" fill="#BF953F" />
+          <rect x="13" y="165" width="34" height="4" fill="#BF953F" />
+        </svg>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const HighContrastShatterFragment = ({ index }: { index: number }) => {
+  const angle = (index * 45 * Math.PI) / 180;
+  const distance = 120 + Math.random() * 100;
+  return (
+    <motion.div
+      className="absolute h-5 w-5"
+      initial={{ x: 0, y: 0, opacity: 1, scale: 1, rotate: Math.random() * 360 }}
+      animate={{
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance,
+        opacity: 0,
+        scale: 0.1,
+        rotate: 720,
+      }}
+      transition={{ duration: 0.7, ease: [0.25, 1, 0.5, 1] }} 
+      style={{
+        background: index % 3 === 0 ? "#BF953F" : index % 3 === 1 ? "#FCF6BA" : "#8A4528",
+        clipPath: "polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)",
+        boxShadow: "0 0 20px rgba(191, 149, 63, 0.8)",
+      }}
+    />
+  );
+};
+
 const Index = () => {
   const [currentTry, setCurrentTry] = useState(1);
   const [picksThisTry, setPicksThisTry] = useState(0);
-  const [won, setWon] = useState<boolean | null>(null);
-  const [pendingNextTry, setPendingNextTry] = useState(false);
   const [revealedPots, setRevealedPots] = useState<Set<number>>(new Set());
+  const [won, setWon] = useState<boolean | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [winningPot, setWinningPot] = useState(() =>
-    Math.floor(Math.random() * TOTAL_POTS)
-  );
+  const [pendingNextTry, setPendingNextTry] = useState(false);
+  const [winningPot] = useState(() => Math.floor(Math.random() * TOTAL_POTS));
   const [discountCodes, setDiscountCodes] = useState<string[]>([]);
   const [selectedCode, setSelectedCode] = useState<string>('');
+  const [copied, setCopied] = useState(false);
+
+  // Bat & Shake state
+  const [isSwinging, setIsSwinging] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [screenShake, setScreenShake] = useState(false);
+  const [mobileStrikePos, setMobileStrikePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024); // Use lg breakpoint for "mobile" interaction
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   useEffect(() => {
     fetch('https://opensheet.elk.sh/1c-BJMLAUPVN3vJ9K7uesj0Z980aX7T4ujCveGFzTn2g/Sheet1')
       .then(res => res.json())
-      .then((rows: Record<string, string>[]) => {
-        if (rows.length > 0) {
-          const headerCode = Object.keys(rows[0])[0];
-          const valueCodes = rows.map(row => Object.values(row)[0]).filter(Boolean);
-          const allCodes = [headerCode, ...valueCodes].filter(Boolean);
-          console.log('Loaded discount codes:', allCodes.length);
-          if (allCodes.length > 0) setDiscountCodes(allCodes);
-        }
+      .then(data => {
+        const codes = data.map((row: any) => row.Codes).filter(Boolean);
+        setDiscountCodes(codes);
       })
-      .catch((err) => {
-        console.error('Failed to fetch discount codes:', err);
-      });
+      .catch(err => console.error('Error fetching codes:', err));
   }, []);
 
-  const gameOver = won !== null;
-
-  const startNextTry = useCallback(() => {
-    setRevealedPots(new Set());
-    setPicksThisTry(0);
-    setCurrentTry((prev) => prev + 1);
-    setWinningPot(Math.floor(Math.random() * TOTAL_POTS));
-  }, []);
-
-  const handlePick = useCallback(
-    (index: number) => {
-      if (gameOver || revealedPots.has(index) || pendingNextTry) return;
-
-      const newPicks = picksThisTry + 1;
-      setPicksThisTry(newPicks);
-      setRevealedPots((prev) => new Set(prev).add(index));
-
-      if (index === winningPot) {
-        setWon(true);
-        setShowConfetti(true);
-        const nextCode = getNextAvailableCode(discountCodes);
-        setSelectedCode(nextCode ?? 'NO-CODES-LEFT');
-      } else if (newPicks >= MAX_PICKS_PER_TRY) {
-        if (currentTry >= MAX_TRIES) {
-          setWon(false);
-        } else {
-          // Show "Try Again" button instead of auto-advancing
-          setPendingNextTry(true);
-        }
-      }
-    },
-    [picksThisTry, gameOver, winningPot, revealedPots, currentTry, discountCodes, pendingNextTry]
-  );
-
-  const handleNextTry = useCallback(() => {
-    setPendingNextTry(false);
-    startNextTry();
-  }, [startNextTry]);
-
-  const copyCode = () => {
-    navigator.clipboard.writeText(selectedCode);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const getNextAvailableCode = (codes: string[]) => {
+    if (codes.length === 0) return null;
+    return codes[Math.floor(Math.random() * codes.length)];
   };
 
-  // canRetry = lost this round but still has tries remaining
-  const canRetry = pendingNextTry && !gameOver;
-  // finalLoss = used all tries and still lost
+  const handlePick = useCallback(
+    (index: number, e: React.MouseEvent | React.TouchEvent) => {
+      const isRevealed = revealedPots.has(index);
+      const isGameOver = won !== null;
+      if (isGameOver || isRevealed || pendingNextTry) return;
+
+      // Track mobile touch for bat spawn
+      if ("touches" in e) {
+        setMobileStrikePos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      }
+
+      // 1. Swing animation starts immediately
+      setIsSwinging(true);
+      setTimeout(() => setIsSwinging(false), 200);
+
+      // 2. Impact point (approx 100ms after swing starts)
+      setTimeout(() => {
+        setScreenShake(true);
+        setTimeout(() => setScreenShake(false), 300); // 300ms shake duration
+
+        const nextPicks = picksThisTry + 1;
+        setPicksThisTry(nextPicks);
+        setRevealedPots((prev) => new Set(prev).add(index));
+
+        if (index === winningPot) {
+          setTimeout(() => {
+            setWon(true);
+            setShowConfetti(true);
+            const nextCode = getNextAvailableCode(discountCodes);
+            setSelectedCode(nextCode ?? 'AVURUDU-WINNER');
+          }, 800);
+        } else if (nextPicks >= MAX_PICKS_PER_TRY) {
+          if (currentTry >= MAX_TRIES) {
+            setTimeout(() => setWon(false), 900);
+          } else {
+            setTimeout(() => setPendingNextTry(true), 1200);
+          }
+        }
+      }, 120);
+    },
+    [revealedPots, won, pendingNextTry, picksThisTry, winningPot, currentTry, discountCodes]
+  );
+
+  const startNextTry = () => {
+    setCurrentTry(prev => prev + 1);
+    setPicksThisTry(0);
+    setRevealedPots(new Set());
+    setPendingNextTry(false);
+  };
+
+  const copyCode = () => {
+    if (selectedCode) {
+      navigator.clipboard.writeText(selectedCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const gameOver = won !== null;
+  const canRetry = pendingNextTry && currentTry < MAX_TRIES;
   const finalLoss = won === false;
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center gap-5 overflow-hidden bg-background p-6">
-      {/* Avurudu radial glow background */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: `
-            radial-gradient(ellipse 80% 60% at 20% 20%, hsl(var(--gold) / 0.12) 0%, transparent 70%),
-            radial-gradient(ellipse 60% 80% at 85% 80%, hsl(var(--deep-red) / 0.1) 0%, transparent 70%),
-            radial-gradient(ellipse 90% 50% at 50% 100%, hsl(var(--festive-orange) / 0.08) 0%, transparent 60%)
-          `,
-        }}
-      />
-
-      {/* Kolam / mandala repeating pattern overlay */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.035]"
-        style={{
-          backgroundImage: `
-            repeating-conic-gradient(from 0deg at 50% 50%, hsl(var(--gold)) 0deg 20deg, transparent 20deg 40deg)
-          `,
-          backgroundSize: "100px 100px",
-        }}
-      />
-
-      {/* Decorative double-stripe borders */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-5 bg-gradient-to-r from-[hsl(var(--deep-red))] via-[hsl(var(--gold))] to-[hsl(var(--deep-red))]" />
-      <div className="pointer-events-none absolute inset-x-0 top-5 h-[3px] bg-gradient-to-r from-[hsl(var(--festive-orange))] via-[hsl(var(--deep-red))] to-[hsl(var(--festive-orange))]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-5 bg-gradient-to-r from-[hsl(var(--deep-red))] via-[hsl(var(--gold))] to-[hsl(var(--deep-red))]" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-5 h-[3px] bg-gradient-to-r from-[hsl(var(--festive-orange))] via-[hsl(var(--deep-red))] to-[hsl(var(--festive-orange))]" />
-
-      {/* Corner oil lamps */}
-      {["top-8 left-6", "top-8 right-6", "bottom-8 left-6", "bottom-8 right-6"].map((pos, i) => (
-        <motion.div
-          key={pos}
-          className={`pointer-events-none absolute ${pos} text-3xl`}
-          animate={{ rotate: [0, 8, -8, 0], scale: [1, 1.15, 1] }}
-          transition={{ repeat: Infinity, duration: 3.5, delay: i * 0.6 }}
-        >
-          🪔
-        </motion.div>
-      ))}
-
-      {/* Scattered floating flowers */}
-      {[
-        { emoji: "🪷", x: 12, y: 18 },
-        { emoji: "🌺", x: 75, y: 12 },
-        { emoji: "🌸", x: 88, y: 55 },
-        { emoji: "🪷", x: 8, y: 65 },
-        { emoji: "🌺", x: 45, y: 8 },
-      ].map(({ emoji, x, y }, i) => (
-        <motion.div
-          key={i}
-          className="pointer-events-none absolute text-xl opacity-30"
-          style={{ left: `${x}%`, top: `${y}%` }}
-          animate={{
-            y: [0, -12, 0],
-            rotate: [0, 20, -20, 0],
-            opacity: [0.2, 0.45, 0.2],
-          }}
-          transition={{ repeat: Infinity, duration: 5 + i * 0.7, delay: i * 0.5 }}
-        >
-          {emoji}
-        </motion.div>
-      ))}
-
-      {/* Title */}
-      <motion.div
-        className="z-10 text-center"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+    <>
+      <CursorBat isSwinging={isSwinging} isMobile={isMobile} forceX={mobileStrikePos.x} forceY={mobileStrikePos.y} />
+      
+      <motion.div 
+        animate={screenShake ? { x: [-8, 8, -5, 5, -2, 2, 0], y: [-3, 3, -2, 2, 0] } : { x: 0, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className={`relative flex min-h-screen flex-col items-center justify-center gap-10 overflow-hidden bg-[#FAF0E6] p-6 transition-colors duration-700 ${!isMobile ? 'cursor-none' : ''}`}
       >
-        <h1 className="text-4xl font-bold text-foreground md:text-5xl">
-          කණාමුට්ටි බිඳීම
-        </h1>
-        <p className="mt-2 text-lg font-semibold text-festive-orange">
-          Pick a pot to find the treasure!
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {MAX_PICKS_PER_TRY} picks per try · {MAX_TRIES} tries
-        </p>
-      </motion.div>
+        {/* Premium Vignette Background */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_20%,rgba(60,20,30,0.4)_120%)] mix-blend-multiply" />
+        
+        {/* Subtle Decorative Pattern */}
+        <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#BF953F 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
-      {/* Try & Pick counters */}
-      <div className="z-10 flex items-center gap-3">
-        <div className="rounded-full border border-border bg-card/80 px-5 py-2 text-sm font-bold text-foreground shadow-sm backdrop-blur-sm">
-          Try {currentTry} / {MAX_TRIES}
-        </div>
-        <div className="rounded-full border border-border bg-card/80 px-5 py-2 text-sm font-semibold text-muted-foreground shadow-sm backdrop-blur-sm">
-          Pick {picksThisTry} / {MAX_PICKS_PER_TRY}
-        </div>
-      </div>
-
-      {/* Pots */}
-      <div className="z-10 flex flex-wrap justify-center gap-5">
-        {Array.from({ length: TOTAL_POTS }).map((_, i) => {
-          const isRevealed = revealedPots.has(i);
-          const isWin = i === winningPot && isRevealed;
-          const isLoss = i !== winningPot && isRevealed;
-          const isClickable = !isRevealed && !gameOver && !canRetry;
-
-          return (
-            <motion.button
-              key={`${currentTry}-${i}`}
-              onClick={() => handlePick(i)}
-              disabled={!isClickable}
-              className={`group relative flex h-36 w-28 flex-col items-center justify-center rounded-2xl border-2 transition-all
-                ${isWin ? "border-[hsl(var(--win))] bg-[hsl(var(--win)/0.1)] shadow-xl shadow-[hsl(var(--win)/0.25)]" : ""}
-                ${isLoss ? "border-muted bg-muted/30 opacity-50 grayscale" : ""}
-                ${isClickable ? "cursor-pointer border-[hsl(var(--pot)/0.3)] bg-card/70 backdrop-blur-sm hover:border-[hsl(var(--pot))] hover:bg-card hover:shadow-xl hover:shadow-[hsl(var(--gold)/0.35)]" : ""}
-                ${!isClickable && !isRevealed ? "cursor-default border-border bg-card/50 opacity-40" : ""}
-              `}
-              whileHover={isClickable ? { scale: 1.1, y: -8 } : {}}
-              whileTap={isClickable ? { scale: 0.92 } : {}}
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: isLoss ? 0.5 : 1, y: 0 }}
-              transition={{ delay: i * 0.1, type: "spring", stiffness: 180 }}
-            >
-              <motion.img
-                src={isRevealed ? (isWin ? potWin : potEmpty) : clayPot}
-                alt={`Pot ${i + 1}`}
-                className="h-20 w-20 object-contain drop-shadow-md"
-                width={80}
-                height={80}
-                animate={isWin ? { rotate: [0, -6, 6, 0], scale: [1, 1.1, 1] } : {}}
-                transition={isWin ? { repeat: 3, duration: 0.3 } : {}}
-              />
-              <span
-                className={`mt-2 text-xs font-bold ${
-                  isWin ? "text-[hsl(var(--win))]" : "text-muted-foreground"
-                }`}
-              >
-                Pot {i + 1}
-              </span>
-              {isClickable && (
-                <motion.div
-                  className="pointer-events-none absolute -top-1 -right-1 text-lg"
-                  animate={{ scale: [1, 1.4, 1], rotate: [0, 15, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.8, delay: i * 0.25 }}
-                >
-                  ✨
-                </motion.div>
-              )}
-            </motion.button>
-          );
-        })}
-      </div>
-
-      {/* Try Again prompt */}
-      <AnimatePresence>
-        {canRetry && (
-          <motion.div
-            className="z-10 flex flex-col items-center gap-3 text-center"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
+        {/* Header Section */}
+        <motion.div
+          className="z-10 text-center"
+          initial={{ y: -30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <h1
+            className="mb-3 text-5xl font-black tracking-widest sm:text-7xl drop-shadow-sm"
+            style={{
+              background: "linear-gradient(90deg, #BF953F 0%, #FCF6BA 50%, #AA771C 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
           >
-            <p className="text-lg font-bold text-festive-orange">
-              😅 No luck this time! You have 1 try remaining.
-            </p>
-            <motion.button
-              onClick={handleNextTry}
-              className="z-10 rounded-full px-8 py-3 font-bold shadow-lg transition-all"
-              style={{
-                background: "linear-gradient(90deg, #b8860b 0%, #f9d56e 50%, #c9972b 100%)",
-                color: "#3a2200",
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              🏺 Try Again
-            </motion.button>
+            කණාමුට්ටිය
+          </h1>
+          <p className="text-xs font-bold tracking-[0.4em] text-black/50 uppercase">
+            ✦ Avurudu Challenge ✦
+          </p>
+        </motion.div>
+
+        {/* Status Area */}
+        {!gameOver && !canRetry && (
+          <motion.div 
+            className="z-10 flex gap-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="rounded-full border border-black/5 bg-white/20 px-8 py-2.5 text-sm font-bold backdrop-blur-xl shadow-sm text-black/70">
+              Try <span className="text-[#BF953F] px-1 text-base">{currentTry}</span> of {MAX_TRIES}
+            </div>
           </motion.div>
         )}
-      </AnimatePresence>
 
-      {/* ── Win Result ─────────────────────────────────────────────────── */}
-      <AnimatePresence>
-        {won === true && (
-          <motion.div
-            className="z-10 flex flex-col items-center gap-4 text-center"
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", stiffness: 200 }}
-          >
-            <p className="text-3xl font-bold text-[hsl(var(--win))]">
-              🎉 Congratulations! You found the treasure! 🥳
-            </p>
+        {/* Pot Arena (2-2-1 Mobile, 5 Row Desktop) */}
+        <div className="z-10 flex flex-wrap justify-center gap-6 sm:gap-10 max-w-6xl w-full">
+          {Array.from({ length: TOTAL_POTS }).map((_, i) => {
+            const isRevealed = revealedPots.has(i);
+            const isWin = i === winningPot && isRevealed;
+            const isLoss = i !== winningPot && isRevealed;
+            const isInteractable = !isRevealed && !gameOver && !canRetry;
 
-            {/* Gold greeting */}
-            <p
-              className="text-xl font-extrabold tracking-wide"
-              style={{
-                background: "linear-gradient(90deg, #b8860b 0%, #f9d56e 50%, #c9972b 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              සුභ අලුත් අවුරුද්දක් වේවා! ✦
-            </p>
-
-            {/* Discount code card */}
-            <motion.div
-              className="relative mt-2 overflow-hidden rounded-2xl border-2 border-[hsl(var(--gold))] bg-card/90 px-8 py-5 shadow-2xl shadow-[hsl(var(--gold)/0.3)] backdrop-blur-sm"
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              {/* Shimmering gold sweep */}
+            return (
               <motion.div
-                className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-[hsl(var(--gold)/0.15)] to-transparent"
-                animate={{ x: ["-100%", "200%"] }}
-                transition={{ repeat: Infinity, duration: 2.5, ease: "linear" }}
-              />
-              <p className="text-sm font-semibold text-muted-foreground">
-                🎁 Your Discount Code
+                key={`${currentTry}-${i}`}
+                className="relative flex justify-center basis-[40%] md:basis-[15%]"
+                animate={{
+                  y: isRevealed ? 0 : [0, -10, 0],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  delay: i * 0.2,
+                  ease: "easeInOut",
+                }}
+              >
+                {/* Luxe Hanging Rope */}
+                {!isRevealed && (
+                  <div className="absolute -top-20 left-1/2 h-20 w-[2px] -translate-x-1/2 bg-gradient-to-b from-black/0 via-[#BF953F]/60 to-[#BF953F]/20" />
+                )}
+
+                <motion.button
+                  onMouseDown={(e) => handlePick(i, e)}
+                  onTouchStart={(e) => handlePick(i, e)}
+                  disabled={!isInteractable}
+                  className={`group relative flex flex-col items-center justify-center transition-all duration-500
+                    ${isLoss ? "opacity-0 scale-50" : ""}
+                    ${!isInteractable && !isRevealed ? "opacity-30 grayscale saturate-0" : ""}
+                  `}
+                  initial={{ opacity: 0, y: 50, scale: 0.8 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ delay: i * 0.08 + 0.2, type: "spring", stiffness: 100 }}
+                  whileHover={isInteractable ? { scale: 1.05, y: -5 } : {}}
+                  whileTap={isInteractable ? { scale: 0.95 } : {}}
+                >
+                  {/* High Contrast Shatter Effect */}
+                  {isRevealed && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      {Array.from({ length: 8 }).map((_, idx) => (
+                        <HighContrastShatterFragment key={idx} index={idx} />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 3D Shaded Pot Image */}
+                  <div className={`relative ${isRevealed ? '' : 'drop-shadow-[0_20px_20px_rgba(0,0,0,0.15)] group-hover:drop-shadow-[0_25px_25px_rgba(191,149,63,0.3)] transition-all duration-300'}`}>
+                    <img
+                      src={isRevealed ? (isWin ? potWin : potEmpty) : clayPot}
+                      alt="Pot"
+                      className={`h-36 w-36 sm:h-44 sm:w-44 object-contain ${isRevealed ? 'scale-110' : ''}`}
+                    />
+                    
+                    {/* Gold Rim Overlay for Unrevealed Pots */}
+                    {!isRevealed && (
+                      <div className="absolute top-[8%] left-[23%] h-[15%] w-[54%] rounded-[100%] border-t-[3px] border-[#FCF6BA] opacity-60 mix-blend-overlay pointer-events-none" />
+                    )}
+                  </div>
+
+                  {isInteractable && isMobile && (
+                    <motion.div
+                      className="absolute -bottom-6 text-[10px] font-bold tracking-widest uppercase text-[#BF953F] opacity-70"
+                      animate={{ opacity: [0.3, 0.8, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      Tap to Strike
+                    </motion.div>
+                  )}
+                </motion.button>
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* UI Overlays */}
+        <AnimatePresence>
+          {canRetry && (
+            <motion.div
+              className="z-20 flex flex-col items-center gap-5 text-center bg-white/40 p-10 rounded-[2.5rem] border border-white/50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] backdrop-blur-3xl"
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            >
+              <p className="text-2xl font-black text-black/80 uppercase tracking-widest">
+                Missed! 🏺
               </p>
-              <p className="mt-1 font-mono text-3xl font-black tracking-widest text-foreground">
-                {selectedCode}
+              <p className="text-sm font-semibold text-black/60 max-w-[220px] leading-relaxed">
+                That was an empty pot. You have one final chance to find the treasure.
               </p>
               <motion.button
-                onClick={copyCode}
-                className="mt-3 rounded-full bg-primary px-6 py-2 text-sm font-bold text-primary-foreground shadow-md transition-all hover:shadow-lg hover:brightness-110"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                onClick={startNextTry}
+                className="mt-4 px-12 py-4 rounded-full font-black text-xs tracking-[0.2em] uppercase shadow-xl transition-shadow hover:shadow-[0_10px_30px_rgba(191,149,63,0.3)]"
+                style={{
+                  background: "linear-gradient(90deg, #BF953F 0%, #FCF6BA 50%, #AA771C 100%)",
+                  color: "#1A1100",
+                }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
               >
-                {copied ? "✅ Copied!" : "📋 Copy Code"}
+                Strike Again
               </motion.button>
             </motion.div>
+          )}
 
-            {/* Thank You message — no Play Again */}
+          {won === true && (
             <motion.div
-              className="mt-2 flex flex-col items-center gap-1 text-center"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
+              className="z-20 flex flex-col items-center gap-6 text-center bg-white/60 p-12 rounded-[3.5rem] border border-white/60 shadow-[0_30px_60px_rgba(191,149,63,0.15)] backdrop-blur-3xl"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 150 }}
             >
-              <p className="text-sm font-semibold text-muted-foreground">
-                🙏 Thank you for playing Kana Mutti!
-              </p>
-              <a
-                href="/"
-                className="mt-1 text-xs underline underline-offset-2 text-[hsl(var(--gold))] hover:opacity-75 transition-opacity"
-              >
-                ← Return to Main Website
-              </a>
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-[#BF953F] uppercase tracking-[0.3em]">Treasure Found</p>
+                <p className="text-5xl font-black text-black/90 drop-shadow-sm tracking-tighter">VICTORY!</p>
+              </div>
+
+              <div className="relative w-full overflow-hidden rounded-3xl border border-[#BF953F]/30 bg-white/80 p-8 shadow-inner mt-2">
+                <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 mb-3">Your Exclusive Code</p>
+                <p className="font-mono text-4xl sm:text-5xl font-black tracking-widest text-[#AA771C]">
+                  {selectedCode}
+                </p>
+                <motion.button
+                  onClick={copyCode}
+                  className="mt-8 w-full rounded-2xl bg-black py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-xl hover:bg-black/80 transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {copied ? "✅ Code Copied" : "📋 Copy Code"}
+                </motion.button>
+              </div>
+
+              <div className="mt-4 space-y-3">
+                <p className="text-2xl font-black" style={{
+                  background: "linear-gradient(90deg, #BF953F 0%, #FCF6BA 50%, #AA771C 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}>
+                  සුභ අලුත් අවුරුද්දක් වේවා!
+                </p>
+                <a href="/" className="inline-block text-[10px] uppercase font-black tracking-[0.2em] text-black/40 border-b border-black/20 pb-0.5 hover:text-[#BF953F] hover:border-[#BF953F] transition-colors">
+                  Return to Website →
+                </a>
+              </div>
             </motion.div>
-          </motion.div>
-        )}
+          )}
 
-        {/* ── Final Loss — all tries exhausted ───────────────────────────── */}
-        {finalLoss && (
-          <motion.div
-            className="z-10 flex flex-col items-center gap-3 text-center"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-          >
-            <p className="text-2xl font-bold text-[hsl(var(--lose))]">
-              😢 Better Luck Next Time!
-            </p>
-            <p className="text-muted-foreground text-sm">
-              You've used all your attempts. Thank you for playing! 🙏
-            </p>
+          {finalLoss && (
+            <motion.div
+              className="z-20 flex flex-col items-center gap-6 text-center bg-white/60 p-12 rounded-[3.5rem] border border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.1)] backdrop-blur-3xl max-w-sm"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+            >
+              <div className="space-y-2">
+                <p className="text-4xl font-black text-black/80 uppercase tracking-tighter">Oh No! 🍂</p>
+                <p className="text-sm font-semibold text-black/60 leading-relaxed">
+                  You've used all your attempts. We hope you enjoyed the festive challenge!
+                </p>
+              </div>
+              
+              <div className="h-px w-24 bg-gradient-to-r from-transparent via-black/20 to-transparent my-2" />
 
-            {/* Gold greeting */}
-            <p
-              className="text-lg font-extrabold tracking-wide mt-2"
-              style={{
-                background: "linear-gradient(90deg, #b8860b 0%, #f9d56e 50%, #c9972b 100%)",
+              <p className="text-2xl font-black" style={{
+                background: "linear-gradient(90deg, #BF953F 0%, #FCF6BA 50%, #AA771C 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
-              }}
-            >
-              සුභ අලුත් අවුරුද්දක් වේවා! ✦
-            </p>
-            {/* No Play Again button — all attempts used */}
-          </motion.div>
-        )}
-      </AnimatePresence>
+              }}>
+                සුභ අලුත් අවුරුද්දක් වේවා!
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      {/* Confetti */}
-      {showConfetti &&
-        confettiEmojis.map((emoji, i) => (
-          <FloatingEmoji key={i} emoji={emoji} delay={i * 0.1} />
-        ))}
-    </div>
+        {showConfetti &&
+          confettiEmojis.map((emoji, i) => (
+            <FloatingEmoji key={i} emoji={emoji} delay={i * 0.1} />
+          ))}
+      </motion.div>
+    </>
   );
 };
 
