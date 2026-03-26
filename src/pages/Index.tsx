@@ -7,32 +7,31 @@ import potEmpty from "@/assets/pot-broken-empty.png";
 const TOTAL_POTS = 5;
 const MAX_PICKS_PER_TRY = 2;
 const MAX_TRIES = 2;
-const MAX_CODE_USES = 2;
 const DISCOUNT_USAGE_STORAGE_KEY = "avurudu-discount-usage";
 
 const confettiEmojis = ["🎊", "🪷", "🌸", "✨", "🎉", "🪔", "🌺", "🎆", "🪅", "🥥", "🍌"];
 
-const getStoredCodeUsage = (): Record<string, number> => {
+const getStoredUsedCodes = (): string[] => {
   try {
     const raw = window.localStorage.getItem(DISCOUNT_USAGE_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
-    return {};
+    return [];
   }
 };
 
-const storeCodeUsage = (usage: Record<string, number>) => {
-  window.localStorage.setItem(DISCOUNT_USAGE_STORAGE_KEY, JSON.stringify(usage));
+const storeUsedCodes = (codes: string[]) => {
+  window.localStorage.setItem(DISCOUNT_USAGE_STORAGE_KEY, JSON.stringify(codes));
 };
 
 const getNextAvailableCode = (codes: string[]) => {
-  const usage = getStoredCodeUsage();
-  const nextCode = codes.find((code) => (usage[code] ?? 0) < MAX_CODE_USES);
+  const usedCodes = new Set(getStoredUsedCodes());
+  const nextCode = codes.find((code) => !usedCodes.has(code));
 
   if (!nextCode) return null;
 
-  usage[nextCode] = (usage[nextCode] ?? 0) + 1;
-  storeCodeUsage(usage);
+  storeUsedCodes([...usedCodes, nextCode]);
   return nextCode;
 };
 
