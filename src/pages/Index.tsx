@@ -98,7 +98,7 @@ const Index = () => {
         setWon(true);
         setShowConfetti(true);
         const nextCode = getNextAvailableCode(discountCodes);
-        setSelectedCode(nextCode ?? 'WIN10');
+        setSelectedCode(nextCode ?? 'NO-CODES-LEFT');
       } else if (newPicks >= MAX_PICKS_PER_TRY) {
         if (currentTry >= MAX_TRIES) {
           setWon(false);
