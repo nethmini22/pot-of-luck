@@ -98,8 +98,8 @@ const Index = () => {
       if (index === winningPot) {
         setWon(true);
         setShowConfetti(true);
-        setSelectedCode(discountCodes.length > 0 ? discountCodes[currentCodeIndex % discountCodes.length] : 'WIN10');
-        setCurrentCodeIndex(prev => prev + 1);
+        const nextCode = getNextAvailableCode(discountCodes);
+        setSelectedCode(nextCode ?? 'WIN10');
       } else if (newPicks >= MAX_PICKS_PER_TRY) {
         if (currentTry >= MAX_TRIES) {
           setWon(false);
@@ -108,7 +108,7 @@ const Index = () => {
         }
       }
     },
-    [picksThisTry, gameOver, winningPot, revealedPots, currentTry, startNextTry, discountCodes, currentCodeIndex]
+    [picksThisTry, gameOver, winningPot, revealedPots, currentTry, startNextTry, discountCodes]
   );
 
   const reset = () => window.location.reload();
