@@ -165,7 +165,7 @@ const Index = () => {
         animate={{ opacity: 1, y: 0 }}
       >
         <h1 className="text-4xl font-bold text-foreground md:text-5xl">
-          🏺 කණාමුට්ටි බිඳීම
+          කණාමුට්ටි බිඳීම
         </h1>
         <p className="mt-2 text-lg font-semibold text-festive-orange">
           Pick a pot to find the treasure!
