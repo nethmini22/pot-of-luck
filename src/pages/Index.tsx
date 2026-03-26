@@ -83,7 +83,7 @@ const Index = () => {
         }
       }
     },
-    [picksThisTry, gameOver, winningPot, revealedPots, currentTry, startNextTry]
+    [picksThisTry, gameOver, winningPot, revealedPots, currentTry, startNextTry, discountCodes, currentCodeIndex]
   );
 
   const reset = () => window.location.reload();
