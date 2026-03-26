@@ -43,9 +43,9 @@ All colors MUST be HSL.
     --pot-glow: 45 100% 60%;
     --win: 142 70% 40%;
     --lose: 0 65% 50%;
-    --gold: 51 100% 50%;
-    --deep-red: 352 76% 48%;
-    --festive-orange: 24 100% 50%;
+    --gold: 45 95% 55%;
+    --deep-red: 0 70% 42%;
+    --festive-orange: 25 90% 55%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -103,25 +103,5 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-  }
-}
-
-@layer utilities {
-  .bg-avurudu {
-    background: linear-gradient(135deg, #ffd1df 0%, #ffdfc4 100%);
-    position: relative;
-    overflow: hidden;
-  }
-  
-  .glass-card {
-    background: rgba(255, 255, 255, 0.25);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-  }
-
-  .text-glow {
-    text-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
   }
 }

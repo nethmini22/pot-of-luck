@@ -1,13 +1,14 @@
-import { useState } from "react";
-import { Toaster } from "sonner";
-import { LoginScreen } from "./components/LoginScreen";
-import { GameScreen } from "./components/GameScreen";
-import { ResultScreen } from "./components/ResultScreen";
-import { Sun } from "lucide-react";
-import "./App.css";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import Index from "./pages/Index.tsx";
+import NotFound from "./pages/NotFound.tsx";
 
-type GameState = "login" | "playing" | "won" | "lost_retry" | "game_over";
+const queryClient = new QueryClient();
 
+<<<<<<< HEAD
 function App() {
   const [gameState, setGameState] = useState<GameState>("login");
   const [strikes, setStrikes] = useState<number>(2);
@@ -62,5 +63,22 @@ function App() {
     </div>
   );
 }
+=======
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+>>>>>>> 6ceebece35898be27618d4a0d9429b4859a8f1bb
 
 export default App;
