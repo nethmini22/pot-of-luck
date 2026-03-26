@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import clayPot from "@/assets/clay-pot.png";
 import potWin from "@/assets/pot-broken-win.png";
@@ -7,7 +7,6 @@ import potEmpty from "@/assets/pot-broken-empty.png";
 const TOTAL_POTS = 5;
 const MAX_PICKS_PER_TRY = 2;
 const MAX_TRIES = 2;
-const DISCOUNT_CODE = "WIN10";
 
 const confettiEmojis = ["🎊", "🪷", "🌸", "✨", "🎉", "🪔", "🌺", "🎆", "🪅", "🥥", "🍌"];
 
@@ -33,6 +32,21 @@ const Index = () => {
   const [winningPot, setWinningPot] = useState(() =>
     Math.floor(Math.random() * TOTAL_POTS)
   );
+  const [discountCodes, setDiscountCodes] = useState<string[]>([]);
+  const [selectedCode, setSelectedCode] = useState<string>('WIN10');
+  const [currentCodeIndex, setCurrentCodeIndex] = useState(0);
+
+  useEffect(() => {
+    fetch('/discount-codes.csv')
+      .then(res => res.text())
+      .then(text => {
+        const codes = text.split('\n').map(line => line.trim()).filter(line => line);
+        setDiscountCodes(codes);
+      })
+      .catch(() => {
+        // Fallback to default if CSV not found
+      });
+  }, []);
 
   const gameOver = won !== null;
 
@@ -54,6 +68,8 @@ const Index = () => {
       if (index === winningPot) {
         setWon(true);
         setShowConfetti(true);
+        setSelectedCode(discountCodes.length > 0 ? discountCodes[currentCodeIndex % discountCodes.length] : 'WIN10');
+        setCurrentCodeIndex(prev => prev + 1);
       } else if (newPicks >= MAX_PICKS_PER_TRY) {
         if (currentTry >= MAX_TRIES) {
           setWon(false);
@@ -68,7 +84,7 @@ const Index = () => {
   const reset = () => window.location.reload();
 
   const copyCode = () => {
-    navigator.clipboard.writeText(DISCOUNT_CODE);
+    navigator.clipboard.writeText(selectedCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -273,7 +289,7 @@ const Index = () => {
                 🎁 Your Discount Code
               </p>
               <p className="mt-1 font-mono text-3xl font-black tracking-widest text-foreground">
-                {DISCOUNT_CODE}
+                {selectedCode}
               </p>
               <motion.button
                 onClick={copyCode}
