@@ -58,7 +58,7 @@ const Index = () => {
     Math.floor(Math.random() * TOTAL_POTS)
   );
   const [discountCodes, setDiscountCodes] = useState<string[]>([]);
-  const [selectedCode, setSelectedCode] = useState<string>('WIN10');
+  const [selectedCode, setSelectedCode] = useState<string>('');
 
   useEffect(() => {
     fetch('https://opensheet.elk.sh/1c-BJMLAUPVN3vJ9K7uesj0Z980aX7T4ujCveGFzTn2g/Sheet1')
