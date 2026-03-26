@@ -51,7 +51,10 @@ function App() {
           />
         )}
         {(gameState === "won" || gameState === "lost_retry" || gameState === "game_over") && (
-          <ResultScreen status={gameState} onRetry={handleRetry} />
+          <ResultScreen 
+            status={gameState} 
+            onRetry={gameState === "lost_retry" ? handleRetry : undefined} 
+          />
         )}
       </div>
 
