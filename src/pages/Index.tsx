@@ -51,6 +51,7 @@ const Index = () => {
   const [currentTry, setCurrentTry] = useState(1);
   const [picksThisTry, setPicksThisTry] = useState(0);
   const [won, setWon] = useState<boolean | null>(null);
+  const [pendingNextTry, setPendingNextTry] = useState(false);
   const [revealedPots, setRevealedPots] = useState<Set<number>>(new Set());
   const [showConfetti, setShowConfetti] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -88,7 +89,7 @@ const Index = () => {
 
   const handlePick = useCallback(
     (index: number) => {
-      if (gameOver || revealedPots.has(index)) return;
+      if (gameOver || revealedPots.has(index) || pendingNextTry) return;
 
       const newPicks = picksThisTry + 1;
       setPicksThisTry(newPicks);
@@ -103,14 +104,18 @@ const Index = () => {
         if (currentTry >= MAX_TRIES) {
           setWon(false);
         } else {
-          setTimeout(() => startNextTry(), 1500);
+          // Show "Try Again" button instead of auto-advancing
+          setPendingNextTry(true);
         }
       }
     },
-    [picksThisTry, gameOver, winningPot, revealedPots, currentTry, startNextTry, discountCodes]
+    [picksThisTry, gameOver, winningPot, revealedPots, currentTry, discountCodes, pendingNextTry]
   );
 
-  const reset = () => window.location.reload();
+  const handleNextTry = useCallback(() => {
+    setPendingNextTry(false);
+    startNextTry();
+  }, [startNextTry]);
 
   const copyCode = () => {
     navigator.clipboard.writeText(selectedCode);
@@ -118,8 +123,10 @@ const Index = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const waitingForNextTry =
-    !gameOver && picksThisTry >= MAX_PICKS_PER_TRY && currentTry < MAX_TRIES;
+  // canRetry = lost this round but still has tries remaining
+  const canRetry = pendingNextTry && !gameOver;
+  // finalLoss = used all tries and still lost
+  const finalLoss = won === false;
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center gap-5 overflow-hidden bg-background p-6">
@@ -220,7 +227,7 @@ const Index = () => {
           const isRevealed = revealedPots.has(i);
           const isWin = i === winningPot && isRevealed;
           const isLoss = i !== winningPot && isRevealed;
-          const isClickable = !isRevealed && !gameOver && !waitingForNextTry;
+          const isClickable = !isRevealed && !gameOver && !canRetry;
 
           return (
             <motion.button
@@ -269,23 +276,37 @@ const Index = () => {
         })}
       </div>
 
-      {/* Waiting for next try */}
+      {/* Try Again prompt */}
       <AnimatePresence>
-        {waitingForNextTry && (
+        {canRetry && (
           <motion.div
-            className="z-10 text-center"
+            className="z-10 flex flex-col items-center gap-3 text-center"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
             <p className="text-lg font-bold text-festive-orange">
-              😅 No luck this time! Next try coming up…
+              😅 No luck this time! You have 1 try remaining.
             </p>
+            <motion.button
+              onClick={handleNextTry}
+              className="z-10 rounded-full px-8 py-3 font-bold shadow-lg transition-all"
+              style={{
+                background: "linear-gradient(90deg, #b8860b 0%, #f9d56e 50%, #c9972b 100%)",
+                color: "#3a2200",
+              }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              🏺 Try Again
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Win Result with Discount Code */}
+      {/* ── Win Result ─────────────────────────────────────────────────── */}
       <AnimatePresence>
         {won === true && (
           <motion.div
@@ -295,10 +316,20 @@ const Index = () => {
             transition={{ type: "spring", stiffness: 200 }}
           >
             <p className="text-3xl font-bold text-[hsl(var(--win))]">
-              🎉 සුභ අලුත් අවුරුද්දක් වේවා!
+              🎉 Congratulations! You found the treasure! 🥳
             </p>
-            <p className="text-lg text-festive-orange">
-              Congratulations! You found the treasure! 🥳
+
+            {/* Gold greeting */}
+            <p
+              className="text-xl font-extrabold tracking-wide"
+              style={{
+                background: "linear-gradient(90deg, #b8860b 0%, #f9d56e 50%, #c9972b 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              සුභ අලුත් අවුරුද්දක් වේවා! ✦
             </p>
 
             {/* Discount code card */}
@@ -308,7 +339,7 @@ const Index = () => {
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              {/* Shimmering effect */}
+              {/* Shimmering gold sweep */}
               <motion.div
                 className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-[hsl(var(--gold)/0.15)] to-transparent"
                 animate={{ x: ["-100%", "200%"] }}
@@ -329,37 +360,57 @@ const Index = () => {
                 {copied ? "✅ Copied!" : "📋 Copy Code"}
               </motion.button>
             </motion.div>
+
+            {/* Thank You message — no Play Again */}
+            <motion.div
+              className="mt-2 flex flex-col items-center gap-1 text-center"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              <p className="text-sm font-semibold text-muted-foreground">
+                🙏 Thank you for playing Kana Mutti!
+              </p>
+              <a
+                href="/"
+                className="mt-1 text-xs underline underline-offset-2 text-[hsl(var(--gold))] hover:opacity-75 transition-opacity"
+              >
+                ← Return to Main Website
+              </a>
+            </motion.div>
           </motion.div>
         )}
 
-        {won === false && (
+        {/* ── Final Loss — all tries exhausted ───────────────────────────── */}
+        {finalLoss && (
           <motion.div
-            className="z-10 text-center"
+            className="z-10 flex flex-col items-center gap-3 text-center"
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
           >
             <p className="text-2xl font-bold text-[hsl(var(--lose))]">
-              😢 Game Over!
+              😢 Better Luck Next Time!
             </p>
-            <p className="mt-1 text-muted-foreground">
-              Better luck next time! 🙏
+            <p className="text-muted-foreground text-sm">
+              You've used all your attempts. Thank you for playing! 🙏
             </p>
+
+            {/* Gold greeting */}
+            <p
+              className="text-lg font-extrabold tracking-wide mt-2"
+              style={{
+                background: "linear-gradient(90deg, #b8860b 0%, #f9d56e 50%, #c9972b 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              සුභ අලුත් අවුරුද්දක් වේවා! ✦
+            </p>
+            {/* No Play Again button — all attempts used */}
           </motion.div>
         )}
       </AnimatePresence>
-
-      {gameOver && (
-        <motion.button
-          onClick={reset}
-          className="z-10 rounded-full bg-primary px-8 py-3 font-bold text-primary-foreground shadow-lg transition-all hover:shadow-xl hover:brightness-110"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          🏺 Play Again
-        </motion.button>
-      )}
 
       {/* Confetti */}
       {showConfetti &&
