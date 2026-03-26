@@ -40,11 +40,16 @@ const Index = () => {
     fetch('https://opensheet.elk.sh/1c-BJMLAUPVN3vJ9K7uesj0Z980aX7T4ujCveGFzTn2g/Sheet1')
       .then(res => res.json())
       .then((rows: Record<string, string>[]) => {
-        const codes = rows.map(row => Object.values(row)[0]).filter(Boolean);
-        if (codes.length > 0) setDiscountCodes(codes);
+        if (rows.length > 0) {
+          const headerCode = Object.keys(rows[0])[0];
+          const valueCodes = rows.map(row => Object.values(row)[0]).filter(Boolean);
+          const allCodes = [headerCode, ...valueCodes].filter(Boolean);
+          console.log('Loaded discount codes:', allCodes.length);
+          if (allCodes.length > 0) setDiscountCodes(allCodes);
+        }
       })
-      .catch(() => {
-        // Fallback to default if fetch fails
+      .catch((err) => {
+        console.error('Failed to fetch discount codes:', err);
       });
   }, []);
 
