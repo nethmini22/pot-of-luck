@@ -122,7 +122,7 @@ interface IndexProps {
   phone: string;
 }
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxIUfT4BgLUMCmcrxY9FIgHd1E6XvmprdDOWyG5rUL1o1qqM6ms6a7csiTxZXHgDwuZ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwqMpKwlOkMYp45ZzEDN6Q7GoXxWHgRwXg77PYCo6_ueSsjklCGxINDH-HbuCk_R9NO/exec";
 
 const Index = ({ phone }: IndexProps) => {
   const [currentTry, setCurrentTry] = useState(1);
@@ -132,8 +132,6 @@ const Index = ({ phone }: IndexProps) => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [pendingNextTry, setPendingNextTry] = useState(false);
   const [winningPot] = useState(() => Math.floor(Math.random() * TOTAL_POTS));
-  const [discountCodes, setDiscountCodes] = useState<string[]>([]);
-  const [selectedCode, setSelectedCode] = useState<string>('');
   const [apiLoading, setApiLoading] = useState(false);
 
   // Bat & Shake state
@@ -148,21 +146,6 @@ const Index = ({ phone }: IndexProps) => {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
-
-  useEffect(() => {
-    fetch('https://opensheet.elk.sh/1c-BJMLAUPVN3vJ9K7uesj0Z980aX7T4ujCveGFzTn2g/Sheet1')
-      .then(res => res.json())
-      .then(data => {
-        const codes = data.map((row: any) => row.Codes).filter(Boolean);
-        setDiscountCodes(codes);
-      })
-      .catch(err => console.error('Error fetching codes:', err));
-  }, []);
-
-  const getNextAvailableCode = (codes: string[]) => {
-    if (codes.length === 0) return null;
-    return codes[Math.floor(Math.random() * codes.length)];
-  };
 
   const handlePick = useCallback(
     (index: number, e: React.MouseEvent | React.TouchEvent) => {
@@ -190,14 +173,14 @@ const Index = ({ phone }: IndexProps) => {
 
         if (index === winningPot) {
           setApiLoading(true);
-          const nextCode = getNextAvailableCode(discountCodes) ?? 'AVURUDU-WINNER';
-          setSelectedCode(nextCode);
 
           fetch(API_URL, {
             method: "POST",
             mode: "cors",
-            body: JSON.stringify({ action: "win", phone, code: nextCode }),
-          }).then(() => {
+            redirect: "follow",
+            body: JSON.stringify({ action: "win", phone, code: "AVURUDU2026" }),
+          }).then(async (res) => {
+            await res.text();
             setApiLoading(false);
             setWon(true);
             setShowConfetti(true);
@@ -215,7 +198,7 @@ const Index = ({ phone }: IndexProps) => {
         }
       }, 120);
     },
-    [revealedPots, won, pendingNextTry, picksThisTry, winningPot, currentTry, apiLoading, phone, discountCodes]
+    [revealedPots, won, pendingNextTry, picksThisTry, winningPot, currentTry, apiLoading, phone]
   );
 
   const startNextTry = () => {
@@ -366,7 +349,7 @@ const Index = ({ phone }: IndexProps) => {
         {/* UI Overlays */}
         <AnimatePresence>
           {canRetry && (             <motion.div
-              className="z-20 flex flex-col items-center gap-5 text-center bg-white/10 backdrop-blur-xl p-10 rounded-[2.5rem] border border-[#D4AF37]"
+              className="z-20 flex flex-col items-center gap-5 text-center bg-white/10 backdrop-blur-2xl p-10 rounded-[2.5rem] border border-[#D4AF37]"
               style={{ boxShadow: "0 8px 32px rgba(212,175,55,0.2), inset 0 1px 0 rgba(255,255,255,0.5)" }}
               initial={{ opacity: 0, y: 30, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -396,24 +379,27 @@ const Index = ({ phone }: IndexProps) => {
 
           {won === true && (
             <motion.div
-              className="z-20 flex flex-col items-center gap-6 text-center bg-white/10 backdrop-blur-xl p-12 rounded-[3.5rem] border border-[#D4AF37] max-w-sm"
+              className="z-20 flex flex-col items-center gap-6 text-center bg-white/10 backdrop-blur-2xl p-12 rounded-[3.5rem] border border-[#D4AF37] max-w-sm"
               style={{ boxShadow: "0 8px 32px rgba(212,175,55,0.2), inset 0 1px 0 rgba(255,255,255,0.5)" }}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ type: "spring", stiffness: 150 }}
             >
-              <div className="space-y-1">
-                <p className="text-sm font-bold text-[#D4AF37] uppercase tracking-[0.3em]">Treasure Found</p>
-                <p className="text-5xl font-black text-black/90 drop-shadow-sm tracking-tighter">VICTORY!</p>
+              <div className="flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[#FCF6BA] to-[#BF953F] shadow-[0_0_20px_rgba(212,175,55,0.6)] mb-2">
+                <svg className="w-10 h-10 text-white drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
               </div>
 
-              <div className="relative w-full overflow-hidden rounded-3xl border border-[#D4AF37]/30 bg-white/60 p-8 shadow-inner mt-2">
-                <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 mb-3">Your Exclusive Code</p>
-                <p className="font-mono text-4xl sm:text-5xl font-black tracking-widest text-[#D4AF37]" style={{ textShadow: "0 2px 10px rgba(212,175,55,0.3)" }}>
-                  {selectedCode}
+              <div className="space-y-1">
+                <p className="text-5xl font-black text-[#D4AF37] drop-shadow-sm tracking-tighter" style={{ textShadow: "0 2px 10px rgba(212,175,55,0.3)" }}>
+                  VICTORY!
                 </p>
-                <p className="text-xs font-semibold text-black/60 mt-4">
-                  We've also sent this code to {phone} via SMS.
+              </div>
+
+              <div className="relative w-full overflow-hidden rounded-3xl border border-[#D4AF37]/30 bg-white/40 p-6 shadow-inner mt-2">
+                <p className="text-sm font-bold text-black/80 leading-relaxed">
+                  Victory! Your discount code has been sent to your phone via SMS. Check your messages!
                 </p>
               </div>
 
@@ -424,7 +410,7 @@ const Index = ({ phone }: IndexProps) => {
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
                 }}>
-                  සුභ අලුත් අවුරුද්දක් වේවා!
+                  Subha Aluth Avuruddak Wewa!
                 </p>
                 <a href="/" className="inline-block text-[10px] uppercase font-black tracking-[0.2em] text-black/40 border-b border-black/20 pb-0.5 hover:text-[#BF953F] hover:border-[#BF953F] transition-colors">
                   Return to Website →
@@ -434,7 +420,7 @@ const Index = ({ phone }: IndexProps) => {
           )}
 
           {finalLoss && (             <motion.div
-              className="z-20 flex flex-col items-center gap-6 text-center bg-white/10 backdrop-blur-xl p-12 rounded-[3.5rem] border border-[#D4AF37] max-w-sm"
+              className="z-20 flex flex-col items-center gap-6 text-center bg-white/10 backdrop-blur-2xl p-12 rounded-[3.5rem] border border-[#D4AF37] max-w-sm"
               style={{ boxShadow: "0 8px 32px rgba(212,175,55,0.2), inset 0 1px 0 rgba(255,255,255,0.5)" }}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}

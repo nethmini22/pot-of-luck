@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbxIUfT4BgLUMCmcrxY9FIgHd1E6XvmprdDOWyG5rUL1o1qqM6ms6a7csiTxZXHgDwuZ/exec";
+  "https://script.google.com/macros/s/AKfycbwqMpKwlOkMYp45ZzEDN6Q7GoXxWHgRwXg77PYCo6_ueSsjklCGxINDH-HbuCk_R9NO/exec";
 
 // ── Clay Pot Silhouette (SVG) ─────────────────────────────────────────────────
 const PotSilhouette = () => (
@@ -97,22 +97,29 @@ export const LoginScreen = ({ onSuccess }: LoginScreenProps) => {
         body: JSON.stringify({ action: "verify", phone: strippedPhone }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      const data = JSON.parse(text);
 
       if (data.allowed === true) {
         // Fade-out then transition
         setFading(true);
         setTimeout(() => onSuccess(strippedPhone), 700);
       } else {
-        setErrorMsg(data.message ?? "Access denied. Please try again.");
+        setErrorMsg("Attempts exhausted.");
         setApiState("denied");
         triggerShake();
       }
-    } catch {
-      setErrorMsg("Connection failed. Please check your network.");
+    } catch (err) {
+      console.error("The browser blocked the Apps Script response (Likely CORS):", err);
+      setErrorMsg("Connection failed. (Check CORS or 'Anyone' access)");
       setApiState("denied");
       triggerShake();
     }
+  };
+
+  const handleBypass = () => {
+    setFading(true);
+    setTimeout(() => onSuccess("94700000000"), 700);
   };
 
   const handleKey = (e: React.KeyboardEvent) => {
@@ -160,7 +167,7 @@ export const LoginScreen = ({ onSuccess }: LoginScreenProps) => {
         <motion.div
           animate={shake ? { x: [-10, 10, -8, 8, -4, 4, 0] } : { x: 0 }}
           transition={{ duration: 0.55, ease: "easeInOut" }}
-          className="relative overflow-hidden rounded-3xl px-8 py-10 flex flex-col items-center gap-5 backdrop-blur-xl bg-white/10"
+          className="relative overflow-hidden rounded-3xl px-8 py-10 flex flex-col items-center gap-5 backdrop-blur-2xl bg-white/10"
           style={{
             border: "0.5px solid #D4AF37",
             boxShadow:
@@ -280,7 +287,13 @@ export const LoginScreen = ({ onSuccess }: LoginScreenProps) => {
                     color: "#8a5e10",
                   }}
                 >
-                  ✦ {errorMsg}
+                  <p>✦ {errorMsg}</p>
+                  <button 
+                    onClick={handleBypass}
+                    className="mt-2 text-[10px] underline uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity"
+                  >
+                    Bypass for Local Testing →
+                  </button>
                 </div>
               </motion.div>
             )}
