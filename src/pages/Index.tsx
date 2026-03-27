@@ -26,8 +26,8 @@ const CursorBat = ({ isSwinging, isMobile, forceX, forceY }: { isSwinging: boole
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
 
-  // useSpring provides zero-lag but slightly trailing organic feel
-  const springConfig = { damping: 25, stiffness: 200, mass: 0.5 };
+  // Zero-lag instantaneous spring for desktop
+  const springConfig = { damping: 25, stiffness: 1000, mass: 0.05 };
   const smoothX = useSpring(cursorX, springConfig);
   const smoothY = useSpring(cursorY, springConfig);
 
@@ -108,17 +108,23 @@ const HighContrastShatterFragment = ({ index }: { index: number }) => {
         scale: 0.1,
         rotate: 720,
       }}
-      transition={{ duration: 0.7, ease: [0.25, 1, 0.5, 1] }} 
+      transition={{ duration: 0.3, ease: "easeOut" }} 
       style={{
-        background: index % 3 === 0 ? "#BF953F" : index % 3 === 1 ? "#FCF6BA" : "#8A4528",
+        background: index % 2 === 0 ? "#D4AF37" : "#FFB6C1",
         clipPath: "polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)",
-        boxShadow: "0 0 20px rgba(191, 149, 63, 0.8)",
+        boxShadow: "0 0 20px rgba(212, 175, 55, 0.8)",
       }}
     />
   );
 };
 
-const Index = () => {
+interface IndexProps {
+  phone: string;
+}
+
+const API_URL = "https://script.google.com/macros/s/AKfycbxIUfT4BgLUMCmcrxY9FIgHd1E6XvmprdDOWyG5rUL1o1qqM6ms6a7csiTxZXHgDwuZ/exec";
+
+const Index = ({ phone }: IndexProps) => {
   const [currentTry, setCurrentTry] = useState(1);
   const [picksThisTry, setPicksThisTry] = useState(0);
   const [revealedPots, setRevealedPots] = useState<Set<number>>(new Set());
@@ -128,7 +134,7 @@ const Index = () => {
   const [winningPot] = useState(() => Math.floor(Math.random() * TOTAL_POTS));
   const [discountCodes, setDiscountCodes] = useState<string[]>([]);
   const [selectedCode, setSelectedCode] = useState<string>('');
-  const [copied, setCopied] = useState(false);
+  const [apiLoading, setApiLoading] = useState(false);
 
   // Bat & Shake state
   const [isSwinging, setIsSwinging] = useState(false);
@@ -162,7 +168,7 @@ const Index = () => {
     (index: number, e: React.MouseEvent | React.TouchEvent) => {
       const isRevealed = revealedPots.has(index);
       const isGameOver = won !== null;
-      if (isGameOver || isRevealed || pendingNextTry) return;
+      if (isGameOver || isRevealed || pendingNextTry || apiLoading) return;
 
       // Track mobile touch for bat spawn
       if ("touches" in e) {
@@ -183,12 +189,23 @@ const Index = () => {
         setRevealedPots((prev) => new Set(prev).add(index));
 
         if (index === winningPot) {
-          setTimeout(() => {
+          setApiLoading(true);
+          const nextCode = getNextAvailableCode(discountCodes) ?? 'AVURUDU-WINNER';
+          setSelectedCode(nextCode);
+
+          fetch(API_URL, {
+            method: "POST",
+            mode: "cors",
+            body: JSON.stringify({ action: "win", phone, code: nextCode }),
+          }).then(() => {
+            setApiLoading(false);
             setWon(true);
             setShowConfetti(true);
-            const nextCode = getNextAvailableCode(discountCodes);
-            setSelectedCode(nextCode ?? 'AVURUDU-WINNER');
-          }, 800);
+          }).catch(() => {
+            setApiLoading(false);
+            setWon(true);
+            setShowConfetti(true);
+          });
         } else if (nextPicks >= MAX_PICKS_PER_TRY) {
           if (currentTry >= MAX_TRIES) {
             setTimeout(() => setWon(false), 900);
@@ -198,7 +215,7 @@ const Index = () => {
         }
       }, 120);
     },
-    [revealedPots, won, pendingNextTry, picksThisTry, winningPot, currentTry, discountCodes]
+    [revealedPots, won, pendingNextTry, picksThisTry, winningPot, currentTry, apiLoading, phone, discountCodes]
   );
 
   const startNextTry = () => {
@@ -206,14 +223,6 @@ const Index = () => {
     setPicksThisTry(0);
     setRevealedPots(new Set());
     setPendingNextTry(false);
-  };
-
-  const copyCode = () => {
-    if (selectedCode) {
-      navigator.clipboard.writeText(selectedCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
   };
 
   const gameOver = won !== null;
@@ -227,13 +236,16 @@ const Index = () => {
       <motion.div 
         animate={screenShake ? { x: [-8, 8, -5, 5, -2, 2, 0], y: [-3, 3, -2, 2, 0] } : { x: 0, y: 0 }}
         transition={{ duration: 0.3 }}
-        className={`relative flex min-h-screen flex-col items-center justify-center gap-10 overflow-hidden bg-[#FAF0E6] p-6 transition-colors duration-700 ${!isMobile ? 'cursor-none' : ''}`}
+        className={`relative flex min-h-screen flex-col items-center justify-center gap-10 overflow-hidden p-6 transition-colors duration-700 ${!isMobile ? 'cursor-none' : ''}`}
+        style={{
+          background: "linear-gradient(135deg, #FFD1DC 0%, #FFF8F0 40%, #FFF8F0 70%, #FFD1DC 100%)",
+        }}
       >
         {/* Premium Vignette Background */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0)_20%,rgba(60,20,30,0.4)_120%)] mix-blend-multiply" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,transparent_40%,rgba(252,200,180,0.18)_100%)] mix-blend-multiply" />
         
         {/* Subtle Decorative Pattern */}
-        <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#BF953F 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+        <div className="pointer-events-none absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#D4AF37 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
         {/* Header Section */}
         <motion.div
@@ -271,20 +283,21 @@ const Index = () => {
           </motion.div>
         )}
 
-        {/* Pot Arena (2-2-1 Mobile, 5 Row Desktop) */}
-        <div className="z-10 flex flex-wrap justify-center gap-6 sm:gap-10 max-w-6xl w-full">
+        {/* Pot Arena (Exactly 5 in a single row) */}
+        <div className="z-10 flex flex-nowrap justify-center gap-2 sm:gap-6 w-full max-w-5xl px-4">
           {Array.from({ length: TOTAL_POTS }).map((_, i) => {
             const isRevealed = revealedPots.has(i);
             const isWin = i === winningPot && isRevealed;
             const isLoss = i !== winningPot && isRevealed;
-            const isInteractable = !isRevealed && !gameOver && !canRetry;
+            const isInteractable = !isRevealed && !gameOver && !canRetry && !apiLoading;
 
             return (
               <motion.div
                 key={`${currentTry}-${i}`}
-                className="relative flex justify-center basis-[40%] md:basis-[15%]"
+                className="relative flex justify-center basis-[18%] sm:basis-[16%]"
+                style={{ transformOrigin: "50% -300px" }}
                 animate={{
-                  y: isRevealed ? 0 : [0, -10, 0],
+                  rotate: isRevealed ? 0 : [-3, 3, -3],
                 }}
                 transition={{
                   duration: 4,
@@ -293,9 +306,9 @@ const Index = () => {
                   ease: "easeInOut",
                 }}
               >
-                {/* Luxe Hanging Rope */}
+                {/* Thin Gold String */}
                 {!isRevealed && (
-                  <div className="absolute -top-20 left-1/2 h-20 w-[2px] -translate-x-1/2 bg-gradient-to-b from-black/0 via-[#BF953F]/60 to-[#BF953F]/20" />
+                  <div className="absolute -top-[300px] left-1/2 h-[300px] w-[1px] -translate-x-1/2 bg-gradient-to-t from-[#D4AF37] to-transparent" />
                 )}
 
                 <motion.button
@@ -352,9 +365,9 @@ const Index = () => {
 
         {/* UI Overlays */}
         <AnimatePresence>
-          {canRetry && (
-            <motion.div
-              className="z-20 flex flex-col items-center gap-5 text-center bg-white/40 p-10 rounded-[2.5rem] border border-white/50 shadow-[0_20px_50px_rgba(0,0,0,0.05)] backdrop-blur-3xl"
+          {canRetry && (             <motion.div
+              className="z-20 flex flex-col items-center gap-5 text-center bg-white/10 backdrop-blur-xl p-10 rounded-[2.5rem] border border-[#D4AF37]"
+              style={{ boxShadow: "0 8px 32px rgba(212,175,55,0.2), inset 0 1px 0 rgba(255,255,255,0.5)" }}
               initial={{ opacity: 0, y: 30, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
@@ -383,29 +396,25 @@ const Index = () => {
 
           {won === true && (
             <motion.div
-              className="z-20 flex flex-col items-center gap-6 text-center bg-white/60 p-12 rounded-[3.5rem] border border-white/60 shadow-[0_30px_60px_rgba(191,149,63,0.15)] backdrop-blur-3xl"
+              className="z-20 flex flex-col items-center gap-6 text-center bg-white/10 backdrop-blur-xl p-12 rounded-[3.5rem] border border-[#D4AF37] max-w-sm"
+              style={{ boxShadow: "0 8px 32px rgba(212,175,55,0.2), inset 0 1px 0 rgba(255,255,255,0.5)" }}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ type: "spring", stiffness: 150 }}
             >
               <div className="space-y-1">
-                <p className="text-sm font-bold text-[#BF953F] uppercase tracking-[0.3em]">Treasure Found</p>
+                <p className="text-sm font-bold text-[#D4AF37] uppercase tracking-[0.3em]">Treasure Found</p>
                 <p className="text-5xl font-black text-black/90 drop-shadow-sm tracking-tighter">VICTORY!</p>
               </div>
 
-              <div className="relative w-full overflow-hidden rounded-3xl border border-[#BF953F]/30 bg-white/80 p-8 shadow-inner mt-2">
+              <div className="relative w-full overflow-hidden rounded-3xl border border-[#D4AF37]/30 bg-white/60 p-8 shadow-inner mt-2">
                 <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-black/50 mb-3">Your Exclusive Code</p>
-                <p className="font-mono text-4xl sm:text-5xl font-black tracking-widest text-[#AA771C]">
+                <p className="font-mono text-4xl sm:text-5xl font-black tracking-widest text-[#D4AF37]" style={{ textShadow: "0 2px 10px rgba(212,175,55,0.3)" }}>
                   {selectedCode}
                 </p>
-                <motion.button
-                  onClick={copyCode}
-                  className="mt-8 w-full rounded-2xl bg-black py-4 text-xs font-black uppercase tracking-[0.2em] text-white shadow-xl hover:bg-black/80 transition-colors"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  {copied ? "✅ Code Copied" : "📋 Copy Code"}
-                </motion.button>
+                <p className="text-xs font-semibold text-black/60 mt-4">
+                  We've also sent this code to {phone} via SMS.
+                </p>
               </div>
 
               <div className="mt-4 space-y-3">
@@ -424,20 +433,20 @@ const Index = () => {
             </motion.div>
           )}
 
-          {finalLoss && (
-            <motion.div
-              className="z-20 flex flex-col items-center gap-6 text-center bg-white/60 p-12 rounded-[3.5rem] border border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.1)] backdrop-blur-3xl max-w-sm"
+          {finalLoss && (             <motion.div
+              className="z-20 flex flex-col items-center gap-6 text-center bg-white/10 backdrop-blur-xl p-12 rounded-[3.5rem] border border-[#D4AF37] max-w-sm"
+              style={{ boxShadow: "0 8px 32px rgba(212,175,55,0.2), inset 0 1px 0 rgba(255,255,255,0.5)" }}
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
             >
               <div className="space-y-2">
                 <p className="text-4xl font-black text-black/80 uppercase tracking-tighter">Oh No! 🍂</p>
                 <p className="text-sm font-semibold text-black/60 leading-relaxed">
-                  You've used all your attempts. We hope you enjoyed the festive challenge!
+                  No attempts remaining. Subha Aluth Avuruddak Wewa!
                 </p>
               </div>
               
-              <div className="h-px w-24 bg-gradient-to-r from-transparent via-black/20 to-transparent my-2" />
+              <div className="h-px w-24 bg-gradient-to-r from-transparent via-[#D4AF37]/40 to-transparent my-2" />
 
               <p className="text-2xl font-black" style={{
                 background: "linear-gradient(90deg, #BF953F 0%, #FCF6BA 50%, #AA771C 100%)",

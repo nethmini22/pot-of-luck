@@ -10,7 +10,7 @@ import Index from "./pages/Index.tsx";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [userPhone, setUserPhone] = useState<string | null>(null);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -18,14 +18,14 @@ const App = () => {
         <Toaster />
         <Sonner />
         <AnimatePresence mode="wait">
-          {!loggedIn ? (
+          {!userPhone ? (
             <motion.div
               key="login"
               initial={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <LoginScreen onSuccess={() => setLoggedIn(true)} />
+              <LoginScreen onSuccess={(phone) => setUserPhone(phone)} />
             </motion.div>
           ) : (
             <motion.div
@@ -34,7 +34,7 @@ const App = () => {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              <Index />
+              <Index phone={userPhone} />
             </motion.div>
           )}
         </AnimatePresence>

@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const API_URL =
-  "https://script.google.com/macros/s/AKfycbxClTX5sHAkYMflWA3Ogru_Und6VaIt1l0JKwMTU_Al-n8-zllnwhgplT3y7IiGe307/exec";
+  "https://script.google.com/macros/s/AKfycbxIUfT4BgLUMCmcrxY9FIgHd1E6XvmprdDOWyG5rUL1o1qqM6ms6a7csiTxZXHgDwuZ/exec";
 
 // ── Clay Pot Silhouette (SVG) ─────────────────────────────────────────────────
 const PotSilhouette = () => (
@@ -57,7 +57,7 @@ const petals = [
 ];
 
 interface LoginScreenProps {
-  onSuccess: () => void;
+  onSuccess: (phone: string) => void;
 }
 
 type ApiState = "idle" | "loading" | "denied";
@@ -94,7 +94,7 @@ export const LoginScreen = ({ onSuccess }: LoginScreenProps) => {
         method: "POST",
         mode: "cors",
         redirect: "follow",
-        body: JSON.stringify({ phone: strippedPhone }),
+        body: JSON.stringify({ action: "verify", phone: strippedPhone }),
       });
 
       const data = await res.json();
@@ -102,7 +102,7 @@ export const LoginScreen = ({ onSuccess }: LoginScreenProps) => {
       if (data.allowed === true) {
         // Fade-out then transition
         setFading(true);
-        setTimeout(() => onSuccess(), 700);
+        setTimeout(() => onSuccess(strippedPhone), 700);
       } else {
         setErrorMsg(data.message ?? "Access denied. Please try again.");
         setApiState("denied");
@@ -123,7 +123,7 @@ export const LoginScreen = ({ onSuccess }: LoginScreenProps) => {
     <motion.div
       className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden p-4"
       style={{
-        background: "linear-gradient(135deg, #fce4ec 0%, #fff3e0 40%, #fdf6ee 70%, #fce4ec 100%)",
+        background: "linear-gradient(135deg, #FFD1DC 0%, #FFF8F0 40%, #FFF8F0 70%, #FFD1DC 100%)",
       }}
       animate={{ opacity: fading ? 0 : 1 }}
       transition={{ duration: 0.65, ease: "easeInOut" }}
@@ -160,14 +160,11 @@ export const LoginScreen = ({ onSuccess }: LoginScreenProps) => {
         <motion.div
           animate={shake ? { x: [-10, 10, -8, 8, -4, 4, 0] } : { x: 0 }}
           transition={{ duration: 0.55, ease: "easeInOut" }}
-          className="relative overflow-hidden rounded-3xl px-8 py-10 flex flex-col items-center gap-5"
+          className="relative overflow-hidden rounded-3xl px-8 py-10 flex flex-col items-center gap-5 backdrop-blur-xl bg-white/10"
           style={{
-            background: "rgba(255,255,255,0.18)",
-            backdropFilter: "blur(28px)",
-            WebkitBackdropFilter: "blur(28px)",
-            border: "0.5px solid rgba(200,165,50,0.55)",
+            border: "0.5px solid #D4AF37",
             boxShadow:
-              "0 8px 48px rgba(232,160,160,0.22), 0 2px 12px rgba(200,165,50,0.12), inset 0 1px 0 rgba(255,255,255,0.55)",
+              "0 8px 32px rgba(212,175,55,0.22), inset 0 1px 0 rgba(255,255,255,0.55)",
           }}
         >
           {/* Inner shimmer overlay */}
