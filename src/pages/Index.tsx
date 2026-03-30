@@ -133,6 +133,7 @@ const Index = ({ phone }: IndexProps) => {
   const [pendingNextTry, setPendingNextTry] = useState(false);
   const [winningPot] = useState(() => Math.floor(Math.random() * TOTAL_POTS));
   const [apiLoading, setApiLoading] = useState(false);
+  const [discountCode, setDiscountCode] = useState<string | null>(null);
 
   // Bat & Shake state
   const [isSwinging, setIsSwinging] = useState(false);
@@ -180,7 +181,13 @@ const Index = ({ phone }: IndexProps) => {
             redirect: "follow",
             body: JSON.stringify({ action: "win", phone, code: "AVURUDU2026" }),
           }).then(async (res) => {
-            await res.text();
+            const responseText = await res.text();
+            try {
+              const data = JSON.parse(responseText);
+              setDiscountCode(data.code || data.discountCode || responseText);
+            } catch {
+              setDiscountCode(responseText);
+            }
             setApiLoading(false);
             setWon(true);
             setShowConfetti(true);
@@ -398,9 +405,17 @@ const Index = ({ phone }: IndexProps) => {
               </div>
 
               <div className="relative w-full overflow-hidden rounded-3xl border border-[#D4AF37]/30 bg-white/40 p-6 shadow-inner mt-2">
-                <p className="text-sm font-bold text-black/80 leading-relaxed">
-                  Victory! Your discount code has been sent to your phone via SMS. Check your messages!
+                <p className="text-sm font-bold text-black/80 leading-relaxed mb-4">
+                  Your discount code has been sent to your phone via SMS. Check your messages!
                 </p>
+                {discountCode && (
+                  <div className="bg-gradient-to-r from-[#FCF6BA] to-[#FFF8F0] border-2 border-[#D4AF37] rounded-xl p-4 text-center">
+                    <p className="text-xs font-semibold text-black/60 mb-2 tracking-widest">YOUR DISCOUNT CODE</p>
+                    <p className="text-2xl font-black text-[#BF953F] tracking-wider letter-spacing">
+                      {discountCode}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="mt-4 space-y-3">
