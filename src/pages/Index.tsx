@@ -5,7 +5,7 @@ import potWin from "@/assets/pot-broken-win.png";
 import potEmpty from "@/assets/pot-broken-empty.png";
 
 const TOTAL_POTS = 5;
-const MAX_PICKS_PER_TRY = 1;
+const MAX_PICKS_PER_TRY = 2;
 const MAX_TRIES = 2;
 
 const confettiEmojis = ["🌸", "💮", "✨", "🎊", "🏺", "🏵️"];
