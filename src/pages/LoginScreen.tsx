@@ -115,10 +115,6 @@ export const LoginScreen = ({ onSuccess }: LoginScreenProps) => {
     }
   };
 
-  const handleBypass = () => {
-    setFading(true);
-    setTimeout(() => onSuccess("94700000000"), 700);
-  };
 
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") handleSubmit();
@@ -286,12 +282,6 @@ export const LoginScreen = ({ onSuccess }: LoginScreenProps) => {
                   }}
                 >
                   <p>✦ {errorMsg}</p>
-                  <button 
-                    onClick={handleBypass}
-                    className="mt-2 text-[10px] underline uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity"
-                  >
-                    Bypass for Local Testing →
-                  </button>
                 </div>
               </motion.div>
             )}
