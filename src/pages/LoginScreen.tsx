@@ -1,8 +1,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const API_URL =
-"https://script.google.com/macros/s/AKfycby2yGXvPWb_UufEUkwbntqlm7dvpSZDi2wpJuQ6vfzWR3RdjWl8fTyvq49OkXYme04f/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycby2yGXvPWb_UufEUkwbntqlm7dvpSZDi2wpJuQ6vfzWR3RdjWl8fTyvq49OkXYme04f/exec";
 // ── Clay Pot Silhouette (SVG) ─────────────────────────────────────────────────
 const PotSilhouette = () => (
   <svg
