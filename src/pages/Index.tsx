@@ -122,7 +122,7 @@ interface IndexProps {
   phone: string;
 }
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwqMpKwlOkMYp45ZzEDN6Q7GoXxWHgRwXg77PYCo6_ueSsjklCGxINDH-HbuCk_R9NO/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycby2yGXvPWb_UufEUkwbntqlm7dvpSZDi2wpJuQ6vfzWR3RdjWl8fTyvq49OkXYme04f/exec";
 
 const Index = ({ phone }: IndexProps) => {
   const [currentTry, setCurrentTry] = useState(1);
